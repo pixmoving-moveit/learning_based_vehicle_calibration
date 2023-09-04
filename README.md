@@ -36,6 +36,7 @@ Here is my proposal of the structure, which could be modified when doing the tes
 
 
 ## How to use
+This part will be done after we finish our software and algorithms. WIP
 
 
 
