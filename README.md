@@ -53,6 +53,12 @@ data contains as follows and how to get value
 - **learning-base model in both scenarios: regular scenario and parking scenario**
 
 it contains how scenarios, regular scenario and parking scenario. parking scenario accept steering value at dead slow speed, regular scenario dispose of steering value at normal speed.
+
+- **run data monitor: data_monotor will check topic node and topic timegap**
+
+```
+python3 data_monitor.py
+```
 ## Record Data Software Case
 
 It is instructions for how to manipulate vehicle when collect data, the test site should be as flat as possiable(pitch angle should not over 1 degree). 
