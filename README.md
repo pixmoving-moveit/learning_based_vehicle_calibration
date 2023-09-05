@@ -61,23 +61,26 @@ python3 data_monitor.py
 ```
 ## Record Data Software Case
 
-It is instructions for how to manipulate vehicle when collect data, the test site should be as flat as possiable(pitch angle should not over 1 degree). 
+It is instructions for how to manipulate vehicle when collect data, the test site should be as flat as possible(pitch angle should not over 1 degree). 
 
-1.regular scenario data record - accelerate
+Every data is classified according to its speed and throttling/braking information. This way, we can check if we have collected enough data for every case scenario. We will start collecting 3000 data per scenario. For each timestamp, if the steering angle is greater than a threshold (to be defined), that data will be discarded and not classified:
 
-vehicle maintain const speed(0-20km/h, 5km/h per step) each time, combain different throttle paddle target(0-50%, 5% per step).
+- **LOW SPEED SCENARIO (0 - 15km/h)**: in this scenario we have 9 different thottling/braking conditions.
+1. Brake deadzone - 20%
+2. Brake 20% - 25%
+3. Brake > 25%
+4. Throttle deadzone - 25%
+5. Throttle 25% - 30%
+6. Throttle > 30%
 
-2.regular scenario data record - decelerate
+- **HIGH SPEED SCENARIO ( > 15km/h)**: in this scenario we have 9 different thottling/braking conditions.
+1. Brake deadzone - 20%
+2. Brake 20% - 25%
+3. Brake > 25%
+4. Throttle deadzone - 25%
+5. Throttle 25% - 30%
+6. Throttle > 30%
 
-vehicle maintain const speed(20-5km/h, 5km/h per step) each time, combain different brake paddle target(0-50%, 5% per step).
-
-3.regular scenario data record - slide
-
-vehicle maintain const speed(20-5km/h, 5km/h per step) each time, combain 0 throttle paddle value and 0 brake paddle value.
-
-4.parking scenario data record
-
-vehicle maintain const speed(0-20km/h, 5km/h per step) each time, combain different steering angle target(0-100, 5% per step).
 
 ## Software Structure
 When designing the software, we should ensure modularity, maintainability and scalability.
