@@ -65,7 +65,7 @@ It is instructions for how to manipulate vehicle when collect data, the test sit
 
 Every data is classified according to its speed and throttling/braking information. This way, we can check if we have collected enough data for every case scenario. We will start collecting 3000 data per scenario. For each timestamp, if the steering angle is greater than a threshold (to be defined), that data will be discarded and not classified:
 
-- **LOW SPEED SCENARIO (0 - 15km/h)**: in this scenario we have 9 different thottling/braking conditions.
+- **LOW SPEED SCENARIO (0 - 15km/h)**: in this scenario we have 6 different thottling/braking conditions.
 1. Brake deadzone - 20%
 2. Brake 20% - 25%
 3. Brake > 25%
@@ -73,7 +73,7 @@ Every data is classified according to its speed and throttling/braking informati
 5. Throttle 25% - 30%
 6. Throttle > 30%
 
-- **HIGH SPEED SCENARIO ( > 15km/h)**: in this scenario we have 9 different thottling/braking conditions.
+- **HIGH SPEED SCENARIO ( > 15km/h)**: in this scenario we have 6 different thottling/braking conditions.
 1. Brake deadzone - 20%
 2. Brake 20% - 25%
 3. Brake > 25%
