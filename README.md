@@ -67,19 +67,19 @@ Every data is classified according to its speed and throttling/braking informati
 
 - **LOW SPEED SCENARIO (0 - 15km/h)**: in this scenario we have 6 different throttling/braking conditions.
 1. Brake deadzone - 20%
-2. Brake 20% - 25%
-3. Brake > 25%
+2. Brake 20% - 30%
+3. Brake > 30%
 4. Throttle deadzone - 25%
-5. Throttle 25% - 30%
-6. Throttle > 30%
+5. Throttle 25% - 35%
+6. Throttle > 35%
 
 - **HIGH SPEED SCENARIO ( > 15km/h)**: in this scenario we have 6 different throttling/braking conditions.
 1. Brake deadzone - 20%
-2. Brake 20% - 25%
-3. Brake > 25%
+2. Brake 20% - 30%
+3. Brake > 30%
 4. Throttle deadzone - 25%
-5. Throttle 25% - 30%
-6. Throttle > 30%
+5. Throttle 25% - 35%
+6. Throttle > 35%
 
 
 ## Software Structure
