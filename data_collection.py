@@ -38,10 +38,10 @@ class primotest(rclpy.node.Node):
         self.accb = []
 
         self.MAX_DATA = 3000
-        self.SPEED_THRESHOLD = 4       # 15km/h
+        self.SPEED_THRESHOLD = 2.7       # 10km/h
         self.STEERING_THRESHOLD = 40   # 2degrees
-        self.THROTTLE_DEADZONE = 10
-        self.BRAKE_DEADZONE = 10
+        self.THROTTLE_DEADZONE = 7
+        self.BRAKE_DEADZONE = 7
  
         self.g = 9.8
 
@@ -99,7 +99,7 @@ class primotest(rclpy.node.Node):
           
           # THROTTLING SCENARIO to train throttling model
 
-          if(self.braking == 0 and self.throttling > self.THROTTLE_DEADZONE and abs(self.steering) < self.STEERING_THRESHOLD):
+          if(self.braking == 0 and self.throttling >= self.THROTTLE_DEADZONE and abs(self.steering) < self.STEERING_THRESHOLD):
                 
                 #low velocity scenario
 
@@ -167,7 +167,7 @@ class primotest(rclpy.node.Node):
 
           # BRAKING SCENARIO to train braking model
 
-          if(self.braking > self.BRAKE_DEADZONE and self.throttling == 0 and abs(self.steering) < self.STEERING_THRESHOLD):
+          if(self.braking >= self.BRAKE_DEADZONE and self.throttling == 0 and abs(self.steering) < self.STEERING_THRESHOLD):
                 
                 #low velocity scenario
 
