@@ -1,4 +1,4 @@
-#/usr/bin/python
+#! /usr/bin/env python3
 import rclpy
 import rclpy.node
 from pix_hooke_driver_msgs.msg import V2aBrakeStaFb, V2aDriveStaFb, V2aSteerStaFb
