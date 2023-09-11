@@ -4,6 +4,8 @@ import rclpy
 import rclpy.node
 import pandas as pd
 import math
+from collections import deque
+from statistics import mean
 
 from pix_hooke_driver_msgs.msg import V2aBrakeStaFb, V2aDriveStaFb, V2aSteerStaFb
 from sensor_msgs.msg import Imu
@@ -42,15 +44,16 @@ class primotest(rclpy.node.Node):
             self.pitch2 = []
             
             # data sharing member variables
-            self.braking = 0
-            self.throttling = 0
-            self.steering = 0
-            self.acceleration = 0
-            self.velocity = 0
-            self.pitch_angle = 0
+            self.braking = 0.0
+            self.throttling = 0.0
+            self.steering = 0.0
+            self.acceleration = 0.0
+            self.velocity = 0.0
+            self.pitch_angle = 0.0
 
 
             self.MAX_DATA = int(input('Enter the number of data you want to collect for each scenario (suggested: 3000): '))
+            self.NUM_OF_QUEUE = int(input('Enter the queue number (suggested: 20): '))
             self.SPEED_THRESHOLD = float(input('Enter the threshold between low and high speed [KM/H] (suggested: 10): '))  
             self.SPEED_THRESHOLD /= 3.6    
             self.STEERING_THRESHOLD = float(input('Enter the steering threshold in degrees (suggested: 2): '))
@@ -63,6 +66,7 @@ class primotest(rclpy.node.Node):
             self.THROTTLE_THRESHOLD2 = int(input('Enter the throttle threshold number 2 (suggested: 60): '))
             self.BRAKE_THRESHOLD1 = int(input('Enter the brake threshold number 1 (suggested: 15): '))
             self.BRAKE_THRESHOLD2 = int(input('Enter the brake threshold number 2 (suggested: 30): '))
+            
 
             self.g = 9.8
 
@@ -85,35 +89,46 @@ class primotest(rclpy.node.Node):
             self.create_subscription(V2aDriveStaFb, '/pix_hooke/v2a_drivestafb', self.drive_topic_callback, 1)
             self.create_subscription(V2aSteerStaFb, '/pix_hooke/v2a_steerstafb', self.steer_topic_callback, 1)
             self.create_subscription(Imu, '/gnss/chc/imu', self.imu_topic_callback, 1)
+            
+            self.queue_velocity = deque()
+            self.queue_acceleration = deque()
+            self.queue_pitch_angle = deque()
+            self.queue_throttle = deque()
+            self.queue_braking = deque()
 
             #self.create_subscription(Frame, '/from_can_bus', self.can_topic_callback, 10)
 
 
       def pitch_topic_callback(self, msg):
             #self.get_logger().info('Pitch angle in degrees is: "%f"' % msg.data)
-            self.pitch_angle = msg.data
+            self.pitch_angle = float(msg.data)
+            if(len(self.queue_pitch_angle)<self.NUM_OF_QUEUE):
+                  self.queue_pitch_angle.append(msg.data)
+            else:
+                  self.queue_pitch_angle.popleft()
+                  
 
 
       def brake_topic_callback(self, msg):
             #self.get_logger().info('Brake intensity is: ')
-            self.braking = msg.vcu_chassis_brake_padl_fb
+            self.braking = float(msg.vcu_chassis_brake_padl_fb)
 
       def drive_topic_callback(self, msg):
             #self.get_logger().info('Throttle intensity is: ')
-            self.throttling = msg.vcu_chassis_throttle_padl_fb
+            self.throttling = float(msg.vcu_chassis_throttle_padl_fb)
 
             #self.get_logger().info('Velocity is: ')
             #print(msg.vcu_chassis_speed_fb)
-            self.velocity = msg.vcu_chassis_speed_fb
+            self.velocity = float(msg.vcu_chassis_speed_fb)
 
       def steer_topic_callback(self, msg):
             #self.get_logger().info('Steering intensity is: ')
             #print(msg.vcu_chassis_steer_angle_fb)
-            self.steering = msg.vcu_chassis_steer_angle_fb
+            self.steering = float(msg.vcu_chassis_steer_angle_fb)
 
       def imu_topic_callback(self, msg):
             #self.get_logger().info('Acceleration is: ')
-            self.acceleration = msg.linear_acceleration.x
+            self.acceleration = float(msg.linear_acceleration.x)
 
 
       def test_callback(self):
@@ -128,11 +143,11 @@ class primotest(rclpy.node.Node):
                   if(0 < abs(self.velocity) <= self.SPEED_THRESHOLD):
                         
                         if(self.throttling <= self.THROTTLE_THRESHOLD1 and self.i < self.MAX_DATA):
-                              self.vel.append(abs(self.velocity))
-                              self.cmd.append(self.throttling)
-                              self.acc.append(self.acceleration-self.g*math.sin(math.radians(self.pitch_angle)))
-                              self.acc2.append(self.acceleration)
-                              self.pitch.append(self.pitch_angle)
+                              self.vel.append(abs(mean(self.queue_velocity)))
+                              self.cmd.append(mean(self.queue_throttle))
+                              self.acc.append(mean(self.queue_acceleration)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle))))
+                              self.acc2.append(mean(self.queue_acceleration))
+                              self.pitch.append(mean(self.queue_pitch_angle))
                               self.i += 1
                               self.progress_bar1.update(1)
 
