@@ -256,8 +256,8 @@ class primotest(rclpy.node.Node):
 
             #if (self.i == self.MAX_DATA and self.j == self.MAX_DATA and self.h == self.MAX_DATA and self.a == self.MAX_DATA and self.b == self.MAX_DATA and self.c == self.MAX_DATA):
             dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
-            df = pd.DataFrame(dict1)
-            df.to_csv('throttling2.csv') 
+            df1 = pd.DataFrame(dict1)
+            df1.to_csv('throttling.csv') 
 
             #self.i = self.MAX_DATA + 1
 
@@ -361,8 +361,8 @@ class primotest(rclpy.node.Node):
 
             #if (self.ii == self.MAX_DATA and self.jj == self.MAX_DATA and self.hh == self.MAX_DATA and self.aa == self.MAX_DATA and self.bb == self.MAX_DATA and self.cc == self.MAX_DATA):
             dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch degrees': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
-            df = pd.DataFrame(dict2)
-            df.to_csv('braking.csv') 
+            df2 = pd.DataFrame(dict2)
+            df2.to_csv('braking.csv') 
 
             #self.ii = self.MAX_DATA + 1
 
