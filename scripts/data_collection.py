@@ -75,19 +75,19 @@ class primotest(rclpy.node.Node):
 
             self.g = 9.8
 
-            self.progress_bar0 = tqdm(total = self.MAX_DATA, desc = "Low speed: 0 - Throttle deadzone      ")
+            self.progress_bar0 = tqdm(total = self.MAX_DATA, desc = "Low speed: 0 - Throttle deadzone  ")
             self.progress_bar1 = tqdm(total = self.MAX_DATA, desc = "Low speed: Throttle deadzone - " + str(self.THROTTLE_THRESHOLD1) + " ")
             self.progress_bar2 = tqdm(total = self.MAX_DATA, desc = "Low speed: Throttle " + str(self.THROTTLE_THRESHOLD1) + " - " + str(self.THROTTLE_THRESHOLD2) + "       ")
             self.progress_bar3 = tqdm(total = self.MAX_DATA, desc = "Low speed: Throttle > " + str(self.THROTTLE_THRESHOLD2) + "          ")
-            self.progress_bar4 = tqdm(total = self.MAX_DATA, desc = "High speed: 0 - Throttle deadzone       ")
+            self.progress_bar4 = tqdm(total = self.MAX_DATA, desc = "High speed: 0 - Throttle deadzone ")
             self.progress_bar5 = tqdm(total = self.MAX_DATA, desc = "High speed: Throttle deadzone - " + str(self.THROTTLE_THRESHOLD2))
             self.progress_bar6 = tqdm(total = self.MAX_DATA, desc = "High speed: Throttle " + str(self.THROTTLE_THRESHOLD1) + " - " + str(self.THROTTLE_THRESHOLD2) + "      ")
             self.progress_bar7 = tqdm(total = self.MAX_DATA, desc = "High speed: Throttle > " + str(self.THROTTLE_THRESHOLD2) + "         ")
-            self.progress_bar8 = tqdm(total = self.MAX_DATA, desc = "Low speed: 0 - Brake deadzone      ")
+            self.progress_bar8 = tqdm(total = self.MAX_DATA, desc = "Low speed: 0 - Brake deadzone     ")
             self.progress_bar9 = tqdm(total = self.MAX_DATA, desc = "Low speed: Brake deadzone - " + str(self.BRAKE_THRESHOLD1) + "    ")
             self.progress_bar10 = tqdm(total = self.MAX_DATA, desc = "Low speed: Brake " + str(self.BRAKE_THRESHOLD1) + " - " + str(self.BRAKE_THRESHOLD2) + "          ") 
             self.progress_bar11 = tqdm(total = self.MAX_DATA, desc = "Low speed: Brake > " + str(self.BRAKE_THRESHOLD2) + "             ")
-            self.progress_bar12 = tqdm(total = self.MAX_DATA, desc = "High speed: 0 - Brake deadzone     ")
+            self.progress_bar12 = tqdm(total = self.MAX_DATA, desc = "High speed: 0 - Brake deadzone    ")
             self.progress_bar13 = tqdm(total = self.MAX_DATA, desc = "High speed: Brake deadzone - " + str(self.BRAKE_THRESHOLD1) + "   ")
             self.progress_bar14 = tqdm(total = self.MAX_DATA, desc = "High speed: Brake " + str(self.BRAKE_THRESHOLD1) + " - " + str(self.BRAKE_THRESHOLD2) + "         ")
             self.progress_bar15 = tqdm(total = self.MAX_DATA, desc = "High speed: Brake > " + str(self.BRAKE_THRESHOLD2) + "            ")
@@ -130,7 +130,7 @@ class primotest(rclpy.node.Node):
             
             self.throttling = float(msg.vcu_chassis_throttle_padl_fb)
             if(len(self.queue_throttle)<self.NUM_OF_QUEUE):
-                  self.queue_throttle.append(msg.throttling)
+                  self.queue_throttle.append(self.throttling)
             else:
                   self.queue_throttle.popleft()
 

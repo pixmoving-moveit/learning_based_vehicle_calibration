@@ -2,7 +2,7 @@
 #source /home/pixkit/pix/pixkit/Autoware/install/setup.bash
 #ros2 launch ros2_socketcan socket_can_bridge.launch.xml
 #ros2 launch pix_hooke_driver pix_hooke_driver.launch.xml
-#ros2 launch pixkit_sensor_kit_launch gnss.launch
+#ros2 launch pixkit_sensor_kit_launch gnss.launch.xml
 gnome-terminal -x bash -c "source /home/pixkit/pix/pixkit/Autoware/install/setup.bash;ros2 launch ros2_socketcan socket_can_bridge.launch.xml; exec bash"
 sleep 1
 gnome-terminal -x bash -c "source /home/pixkit/pix/pixkit/Autoware/install/setup.bash;ros2 launch pix_hooke_driver pix_hooke_driver.launch.xml; exec bash"
