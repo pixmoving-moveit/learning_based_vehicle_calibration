@@ -9,13 +9,12 @@ ax = plt.axes(projection='3d')
 
 
 
-columns = ["Velocity", "Throttling", "Acceleration_measured"]
-df = pd.read_csv("throttling2.csv", usecols=columns)
+columns = ["Velocity", "Braking", "Acceleration_measured"]
+df = pd.read_csv("braking.csv", usecols=columns)
 
 xdata = df.Velocity
-ydata = df.Throttling
+ydata = df.Braking
 zdata = df.Acceleration_measured
-
 
 cmap = plt.get_cmap('Greens')  # You can choose any colormap you like
 normalize = plt.Normalize(zdata.min(), zdata.max())
@@ -34,3 +33,5 @@ plt.show()
 
 
 #plt.savefig('throttle_calibration_table.png')
+
+

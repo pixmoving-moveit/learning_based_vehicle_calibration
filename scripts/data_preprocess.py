@@ -3,10 +3,10 @@ import numpy as np
 #from scipy.signal import medfilt
 
 # Load the CSV file
-df = pd.read_csv('throttling2.csv')
+df = pd.read_csv('throttling.csv')
 
 # Define columns of interest
-columns = ["Velocity", "Throttling", "Acceleration_measured"]
+columns = ["Velocity", "Throttling", "Acceleration"]
 
 # Step 1: Apply a median filter with a window size of 21 to each column
 #window_size = 21
@@ -28,5 +28,5 @@ for col in columns:
 
 # Now, df contains the cleaned and standardized data
 
-df.to_csv('throttling2_without_outliers.csv', index = False)
+df.to_csv('throttling2.csv', index = False)
 
