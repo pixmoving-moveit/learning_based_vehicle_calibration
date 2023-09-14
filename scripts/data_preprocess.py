@@ -1,17 +1,17 @@
 import pandas as pd
 import numpy as np
-#from scipy.signal import medfilt
+from scipy.signal import medfilt
 
 # Load the CSV file
 df = pd.read_csv('throttling.csv')
 
 # Define columns of interest
-columns = ["Velocity", "Throttling", "Acceleration"]
+columns = ["Velocity", "Throttling", "Acceleration_with_pitch_comp"]
 
 # Step 1: Apply a median filter with a window size of 21 to each column
-#window_size = 21
-#for col in columns:
-    #df[col] = medfilt(df[col], kernel_size=window_size)
+window_size = 21
+for col in columns:
+    df[col] = medfilt(df[col], kernel_size=window_size)
 
 # Step 2: Standardize the data for each column
 for col in columns:
