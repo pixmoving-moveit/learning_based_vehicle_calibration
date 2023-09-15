@@ -6,21 +6,23 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 # Load the CSV file into a DataFrame
-data = pd.read_csv('throttling.csv')
+data = pd.read_csv('throttling_bag_9_14.csv')
 
 # Split the data into input features (velocity and acceleration) and target (command)
-X = data[['Velocity', 'Acceleration']].values
+X = data[['Velocity', 'Acceleration_with_pitch_comp']].values
 y = data['Throttling'].values
 
 # Split the data into training and testing sets (e.g., 80% train, 20% test)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Normalize the input features (standardization)
-#scaler = StandardScaler()
-#X_train = scaler.fit_transform(X_train)
-#X_test = scaler.transform(X_test)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
 
 # Convert NumPy arrays to PyTorch tensors
 X_train = torch.tensor(X_train, dtype=torch.float32)
@@ -32,11 +34,11 @@ y_test = torch.tensor(y_test, dtype=torch.float32)
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
-        self.fc1 = nn.Linear(2, 32)  # Input layer with 2 neurons, hidden layer with 32 neurons
+        self.fc1 = nn.Linear(2, 64)  # Input layer with 2 neurons, hidden layer with 32 neurons
         self.sigmoid1 = nn.Sigmoid()
-        self.fc2 = nn.Linear(32, 16)
+        self.fc2 = nn.Linear(64, 32)
         self.sigmoid2 = nn.Sigmoid()
-        self.fc3 = nn.Linear(16, 1)  # Output layer with 1 neuron
+        self.fc3 = nn.Linear(32, 1)  # Output layer with 1 neuron
 
     def forward(self, x):
         x = self.fc1(x)
@@ -81,4 +83,36 @@ with torch.no_grad():
     for i, pred in enumerate(predictions):
         print(f"Data {i + 1}: {pred.item()}")
 
+# Visualization
+# Create a meshgrid for velocity and acceleration
+velocity_range = np.linspace(X[:, 0].min(), X[:, 0].max(), 100)
+acceleration_range = np.linspace(X[:, 1].min(), X[:, 1].max(), 100)
+V, A = np.meshgrid(velocity_range, acceleration_range)
 
+# Create a grid of input data points for prediction
+input_grid = np.column_stack((V.flatten(), A.flatten()))
+input_grid = scaler.transform(input_grid)
+input_grid = torch.tensor(input_grid, dtype=torch.float32)
+
+# Predict the throttling commands for the entire input grid
+with torch.no_grad():
+    commands = model(input_grid).reshape(V.shape)
+
+# Create the 3D plot
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+# Plot the surface
+surf = ax.plot_surface(V, A, commands, cmap='viridis')
+
+# Customize the plot
+ax.set_xlabel('Velocity')
+ax.set_ylabel('Acceleration')
+ax.set_zlabel('Throttling Output')
+ax.set_title('Neural Network Output vs. Velocity and Acceleration')
+
+# Add a color bar which maps values to colors
+fig.colorbar(surf)
+
+# Show the plot
+plt.show()
