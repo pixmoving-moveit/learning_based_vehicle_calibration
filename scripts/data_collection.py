@@ -179,6 +179,57 @@ class primotest(rclpy.node.Node):
                   self.queue_acceleration_mov_avg.clear()
                   for ush in range(self.DELAY, self.NUM_OF_QUEUE + self.DELAY):
                         self.queue_acceleration_mov_avg.append(self.queue_acceleration[ush])
+                        
+                        
+                        
+      def collection_throttling(self):
+            
+            self.vel.append(abs(mean(self.queue_velocity)))
+            self.cmd.append(mean(self.queue_throttle))
+            if(mean(self.queue_velocity) < 0):
+                  self.acc.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
+                  self.acc2.append(-1*mean(self.queue_acceleration_mov_avg))
+                  self.pitch.append(-1*mean(self.queue_pitch_angle_mov_avg))
+            else:
+                  self.acc.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
+                  self.acc2.append(mean(self.queue_acceleration_mov_avg))
+                  self.pitch.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              
+                              
+            dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
+            df1 = pd.DataFrame(dict1)
+            df1.to_csv('throttling_testing.csv') 
+
+            self.throttling_prec = mean(self.queue_throttle)
+            
+            
+            
+            
+      def collection_braking(self):
+            
+            self.velb.append(abs(mean(self.queue_velocity)))
+            self.cmdb.append(mean(self.queue_throttle))
+            if(mean(self.queue_velocity) < 0):
+                  self.accb.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
+                  self.accb2.append(-1*mean(self.queue_acceleration_mov_avg))
+                  self.pitch2.append(-1*mean(self.queue_pitch_angle_mov_avg))
+            else:
+                  self.accb.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
+                  self.accb2.append(mean(self.queue_acceleration_mov_avg))
+                  self.pitch2.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              
+                              
+            dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch degrees': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
+            df2 = pd.DataFrame(dict2)
+            df2.to_csv('braking_testing.csv') 
+
+            self.braking_prec = mean(self.queue_braking)
+            
+            
+            
+            
             
                   
                         
@@ -198,96 +249,40 @@ class primotest(rclpy.node.Node):
                   if(0 < abs(self.velocity) <= self.SPEED_THRESHOLD):
                         
                         if(0 <= self.throttling <= self.THROTTLE_DEADZONE and self.k < self.MAX_DATA and self.flag == 0):
-                              self.vel.append(abs(mean(self.queue_velocity)))
-                              self.cmd.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.acc.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.acc.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              self.collection_throttling()
                               
                               self.progress_bar0.update(1)
-                              
-                              dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
-                              df1 = pd.DataFrame(dict1)
-                              df1.to_csv('throttling_bag_9_15.csv') 
-
-                              self.throttling_prec = mean(self.queue_throttle)
                               
                               self.k += 1
 
                         
                         elif(self.THROTTLE_DEADZONE < self.throttling <= self.THROTTLE_THRESHOLD1 and self.i < self.MAX_DATA):
-                              self.vel.append(abs(mean(self.queue_velocity)))
-                              self.cmd.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.acc.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.acc.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              self.collection_throttling()
                               
                               self.progress_bar1.update(1)
                               self.flag = 0
-                              
-                              dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
-                              df1 = pd.DataFrame(dict1)
-                              df1.to_csv('throttling_bag_9_15.csv') 
-
-                              self.throttling_prec = mean(self.queue_throttle)
                               
                               self.i += 1
 
 
                         elif(self.THROTTLE_THRESHOLD1 < self.throttling <= self.THROTTLE_THRESHOLD2 and self.j < self.MAX_DATA):
-                              self.vel.append(abs(mean(self.queue_velocity)))
-                              self.cmd.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.acc.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.acc.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              self.collection_throttling()
                               
                               self.progress_bar2.update(1)
                               self.flag = 0
-                              
-                              dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
-                              df1 = pd.DataFrame(dict1)
-                              df1.to_csv('throttling_bag_9_15.csv') 
-
-                              self.throttling_prec = mean(self.queue_throttle)
-                              
+                             
                               self.j += 1
 
 
                         elif(self.throttling > self.THROTTLE_THRESHOLD2 and self.h < self.MAX_DATA):
-                              self.vel.append(abs(mean(self.queue_velocity)))
-                              self.cmd.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.acc.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.acc.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              self.collection_throttling()
                               
                               self.progress_bar3.update(1)
                               self.flag = 0
-                              
-                              dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
-                              df1 = pd.DataFrame(dict1)
-                              df1.to_csv('throttling_bag_9_15.csv') 
-
-                              self.throttling_prec = mean(self.queue_throttle)
                               
                               self.h += 1
 
@@ -297,95 +292,39 @@ class primotest(rclpy.node.Node):
                   elif(self.SPEED_THRESHOLD < abs(self.velocity) <= self.MAX_VELOCITY):
                         
                         if(0 <= self.throttling <= self.THROTTLE_DEADZONE and self.d < self.MAX_DATA and self.flag == 0):
-                              self.vel.append(abs(mean(self.queue_velocity)))
-                              self.cmd.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.acc.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.acc.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              self.collection_throttling()
                               
                               self.progress_bar4.update(1)
-                              
-                              dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
-                              df1 = pd.DataFrame(dict1)
-                              df1.to_csv('throttling_bag_9_15.csv') 
-
-                              self.throttling_prec = mean(self.queue_throttle)
                               
                               self.d += 1
 
 
                         elif(self.THROTTLE_DEADZONE < self.throttling <= self.THROTTLE_THRESHOLD1 and self.a < self.MAX_DATA):
-                              self.vel.append(abs(mean(self.queue_velocity)))
-                              self.cmd.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.acc.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.acc.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              self.collection_throttling()
                               
                               self.progress_bar5.update(1)
                               self.flag = 0
-                              
-                              dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
-                              df1 = pd.DataFrame(dict1)
-                              df1.to_csv('throttling_bag_9_15.csv') 
-
-                              self.throttling_prec = mean(self.queue_throttle)
                               
                               self.a += 1
 
 
                         elif(self.THROTTLE_THRESHOLD1 < self.throttling <= self.THROTTLE_THRESHOLD2 and self.b < self.MAX_DATA):
-                              self.vel.append(abs(mean(self.queue_velocity)))
-                              self.cmd.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.acc.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.acc.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              self.collection_throttling()
                               
                               self.progress_bar6.update(1)
                               self.flag = 0
-                              
-                              dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
-                              df1 = pd.DataFrame(dict1)
-                              df1.to_csv('throttling_bag_9_15.csv') 
-
-                              self.throttling_prec = mean(self.queue_throttle)
-                              
+                           
                               self.b += 1
 
                         elif(self.throttling > self.THROTTLE_THRESHOLD2 and self.c < self.MAX_DATA):
-                              self.vel.append(abs(mean(self.queue_velocity)))
-                              self.cmd.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.acc.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.acc.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.acc2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              self.collection_throttling()
                               
                               self.progress_bar7.update(1)
                               self.flag = 0
-                              
-                              dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
-                              df1 = pd.DataFrame(dict1)
-                              df1.to_csv('throttling_bag_9_15.csv') 
-
-                              self.throttling_prec = mean(self.queue_throttle)
                               
                               self.c += 1
 
@@ -405,96 +344,40 @@ class primotest(rclpy.node.Node):
                   if(0 < abs(self.velocity) <= self.SPEED_THRESHOLD):
                         
                         if(0 <= self.braking <= self.BRAKE_DEADZONE and self.kk < self.MAX_DATA and self.flag == 1):
-                              self.velb.append(abs(mean(self.queue_velocity)))
-                              self.cmdb.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.accb.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.accb.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              self.collection_braking()
                               
                               self.progress_bar8.update(1)
-                              
-                              dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch degrees': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
-                              df2 = pd.DataFrame(dict2)
-                              df2.to_csv('braking_bag_9_15.csv') 
-
-                              self.braking_prec = mean(self.queue_braking) 
                               
                               self.kk += 1
 
 
                         elif(self.BRAKE_DEADZONE < self.braking <= self.BRAKE_THRESHOLD1 and self.ii < self.MAX_DATA):
-                              self.velb.append(abs(mean(self.queue_velocity)))
-                              self.cmdb.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.accb.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.accb.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              self.collection_braking()
                               
                               self.progress_bar9.update(1)
                               self.flag = 1
-                              
-                              dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch degrees': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
-                              df2 = pd.DataFrame(dict2)
-                              df2.to_csv('braking_bag_9_15.csv') 
-
-                              self.braking_prec = mean(self.queue_braking) 
                               
                               self.ii += 1
 
 
                         elif(self.BRAKE_THRESHOLD1 < self.braking <= self.BRAKE_THRESHOLD2 and self.jj < self.MAX_DATA):
-                              self.velb.append(abs(mean(self.queue_velocity)))
-                              self.cmdb.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.accb.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.accb.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              self.collection_braking()
                               
                               self.progress_bar10.update(1)
                               self.flag = 1
-                              
-                              dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch degrees': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
-                              df2 = pd.DataFrame(dict2)
-                              df2.to_csv('braking_bag_9_15.csv') 
-
-                              self.braking_prec = mean(self.queue_braking) 
                               
                               self.jj += 1
 
 
                         elif(self.braking > self.BRAKE_THRESHOLD2 and self.hh < self.MAX_DATA):
-                              self.velb.append(abs(mean(self.queue_velocity)))
-                              self.cmdb.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.accb.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.accb.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              self.collection_braking()
                               
                               self.progress_bar11.update(1)
                               self.flag = 1
-                              
-                              dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch degrees': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
-                              df2 = pd.DataFrame(dict2)
-                              df2.to_csv('braking_bag_9_15.csv') 
-
-                              self.braking_prec = mean(self.queue_braking) 
                               
                               self.hh += 1
 
@@ -504,96 +387,39 @@ class primotest(rclpy.node.Node):
                   elif(self.SPEED_THRESHOLD < abs(self.velocity) <= self.MAX_VELOCITY):
                         
                         if(0 <= self.braking <= self.BRAKE_DEADZONE and self.dd < self.MAX_DATA and self.flag == 1):
-                              self.velb.append(abs(mean(self.queue_velocity)))
-                              self.cmdb.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.accb.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.accb.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              self.collection_braking()
                               
                               self.progress_bar12.update(1)
-                              
-                              dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch degrees': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
-                              df2 = pd.DataFrame(dict2)
-                              df2.to_csv('braking_bag_9_15.csv') 
-
-                              self.braking_prec = mean(self.queue_braking) 
                               
                               self.dd += 1
 
                         elif(self.BRAKE_DEADZONE < self.braking <= self.BRAKE_THRESHOLD1 and self.aa < self.MAX_DATA):
-                              self.velb.append(abs(mean(self.queue_velocity)))
-                              self.cmdb.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.accb.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.accb.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              self.collection_braking()
                               
                               self.progress_bar13.update(1)
                               self.flag = 1
-                              
-                              dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch degrees': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
-                              df2 = pd.DataFrame(dict2)
-                              df2.to_csv('braking_bag_9_15.csv') 
-
-                              self.braking_prec = mean(self.queue_braking) 
-                              
+                             
                               self.aa += 1
 
 
                         elif(self.BRAKE_THRESHOLD1 < self.braking <= self.BRAKE_THRESHOLD2 and self.bb < self.MAX_DATA):
-                              self.velb.append(abs(mean(self.queue_velocity)))
-                              self.cmdb.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.accb.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.accb.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(mean(self.queue_pitch_angle_mov_avg))
+                              
+                              self.collection_braking()
                               
                               self.progress_bar14.update(1)
                               self.flag = 1
-                              
-                              dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch degrees': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
-                              df2 = pd.DataFrame(dict2)
-                              df2.to_csv('braking_bag_9_15.csv') 
-
-                              self.braking_prec = mean(self.queue_braking) 
                               
                               self.bb += 1
                               
 
                         elif(self.braking > self.BRAKE_THRESHOLD2 and self.cc < self.MAX_DATA):
-                              self.velb.append(abs(mean(self.queue_velocity)))
-                              self.cmdb.append(mean(self.queue_throttle))
-                              if(mean(self.queue_velocity) < 0):
-                                    self.accb.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(-1*mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(-1*mean(self.queue_pitch_angle_mov_avg))
-                              else:
-                                    self.accb.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                                    self.accb2.append(mean(self.queue_acceleration_mov_avg))
-                                    self.pitch2.append(mean(self.queue_pitch_angle_mov_avg))
                               
-                                
+                              self.collection_braking()
+                              
                               self.progress_bar15.update(1)
                               self.flag = 1  
-                              
-                              dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch degrees': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
-                              df2 = pd.DataFrame(dict2)
-                              df2.to_csv('braking_bag_9_15.csv') 
-
-                              self.braking_prec = mean(self.queue_braking)  
                               
                               self.cc += 1  
 
@@ -605,8 +431,7 @@ class primotest(rclpy.node.Node):
                               
                               
 
-                              
-                              
+                                                    
 
 def main():
       rclpy.init()

@@ -5,7 +5,7 @@ from sklearn.linear_model import LinearRegression
 
 # Read the data
 columns = ["Velocity", "Throttling", "Acceleration_with_pitch_comp"]
-df = pd.read_csv("throttling_bag_9_14.csv", usecols=columns)
+df = pd.read_csv("throttling_bag_9_15.csv", usecols=columns)
 
 xdata = df.Velocity
 ydata = df.Throttling
