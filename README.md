@@ -2,7 +2,7 @@
 
 ## Overview
 
-Here we present the software structure and data collection about the offline calibration, in two different scenarios: normal driving condition and parking condition.
+Here we present the software structure, data collection, data preprocessing and neural network training and visualization about the offline calibration, in two different scenarios: normal driving condition and parking condition.
 
 ## Input Data Software
 
@@ -61,25 +61,68 @@ python3 data_monitor.py
 ```
 ## Record Data Software Case
 
-It is instructions for how to manipulate vehicle when collect data, the test site should be as flat as possible(pitch angle should not over 1 degree). 
+Since our goal is to build a data-driven model, the first step is to collect enough data suitable for training a neural network model. 
 
-Every data is classified according to its speed and throttling/braking information. This way, we can check if we have collected enough data for every case scenario. We will start collecting 3000 data per scenario. For each timestamp, if the steering angle is greater than a threshold (to be defined), that data will be discarded and not classified:
+Every data is classified according to its speed and throttling/braking information. This way, we can check if we have collected enough data for every case scenario. In order to do so, we have built a software with a simple if-else logic so that it is able to detect and classify the data recorded in its scenario. This stage is very important because this way we can make sure that we have a balanced dataset and that we have enough data to train our neural network model for every conditions. We will start collecting 3000 triplet (velocity, acceleration, throttling/braking) of data per scenario. For each timestamp, if the steering angle is greater than a threshold (2 degrees), that data will be discarded and not classified (since so far we are just interested in the longitudinal dynamic so we should avoid steering):
 
-- **LOW SPEED SCENARIO (0 - 15km/h)**: in this scenario we have 6 different throttling/braking conditions.
-1. Brake deadzone - 20%
-2. Brake 20% - 30%
-3. Brake > 30%
-4. Throttle deadzone - 25%
-5. Throttle 25% - 35%
-6. Throttle > 35%
+- **LOW SPEED SCENARIO (0 - 6km/h)**: in this scenario we have 8 different throttling/braking conditions.
+0. Brake 0 - deadzone
+1. Brake deadzone - 12%
+2. Brake 12% - 20%
+3. Brake > 20%
+4. Throttle 0 - deadzone
+5. Throttle deadzone - 20%
+6. Throttle 20% - 40%
+7. Throttle > 40%
 
-- **HIGH SPEED SCENARIO ( > 15km/h)**: in this scenario we have 6 different throttling/braking conditions.
-1. Brake deadzone - 20%
-2. Brake 20% - 30%
-3. Brake > 30%
-4. Throttle deadzone - 25%
-5. Throttle 25% - 35%
-6. Throttle > 35%
+- **HIGH SPEED SCENARIO ( > 6km/h)**: in this scenario we have 8 different throttling/braking conditions.
+0. Brake 0 - deadzone
+1. Brake deadzone - 12%
+2. Brake 12% - 20%
+3. Brake > 20%
+4. Throttle 0 - deadzone
+5. Throttle deadzone - 20%
+6. Throttle 20% - 40%
+7. Throttle > 40%
+
+As already stated, if the steering angle is greater than 2 degrees, data will not be collected. But there are other conditions under which we discard data:
+
+1. If the velocity is higher than 22km/h, we are not collecting data;
+2. If the velocity is equal to 0km/h, we are not collecting data;
+3. We need to ensure data consistency. In order to do that, we need to check the values of two consecutive throttle/brake commands: if their difference is greater than a certain threshold, we don't collect those data.
+
+Moreover, we also take into consideration the IMU sensor delay, that is the time between the throttle/brake commands being sent and corresponding acceleration executed. We consider this delay to be about 200ms, but it is a tunable parameter in the software so it is possibile to tune it according to the results you obtain'
+
+
+
+These are the rules we adopted for collecting data in an efficient way. But raw data are often affected by noise so before the training stage we should preprocess them. 
+
+## Data Preprocessing
+
+Since raw data collected by human are noisy and non-uniform, preprocessing is an essential step to ensure high quality data.
+
+First, we applied a mean filter to smooth data with a window size of 20 (which can be tuned).
+
+Afterwards, we standardized and normalized data to remove possible outliers and to prepare them for the training stage.
+
+## Neural Network training and visualization
+
+In order to find the relationship between velocity, acceleration and throttle/brake commands, we first need to define our neural network structure and its inputs and output.
+
+Notice that throttling and braking models will be trained separately.
+
+Since we want to generate a calibration table which takes throttle/brake and speed as inputs, and outputs acceleration, we can follow the same structure for the neural network.
+
+So the fully connected neural network will have 2 nodes in the input layer, 64 nodes in the first hidden layer, 16 nodes in the second hidden layer and 1 node in the output layer.
+
+Based on the performance we obtain, we can modify the structure and the number of parameters to be trained.
+
+Now we can split the dataset into training set (80%) and testing set (20%) and we are ready for the training stage.
+
+We chose the Sigmoid function as the activation function, mean square error as the cost function and Adam optimizer, all in Pytorch.
+
+
+
 
 
 ## Software Structure

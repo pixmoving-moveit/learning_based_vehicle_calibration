@@ -71,7 +71,7 @@ class primotest(rclpy.node.Node):
             self.THROTTLE_THRESHOLD2 = 40
             self.BRAKE_THRESHOLD1 = 12
             self.BRAKE_THRESHOLD2 = 20
-            self.DELAY = 15   
+            self.DELAY = 20   
             self.CONSISTENCY_TRESHOLD = 20            
             
 
@@ -209,7 +209,7 @@ class primotest(rclpy.node.Node):
       def collection_braking(self):
             
             self.velb.append(abs(mean(self.queue_velocity)))
-            self.cmdb.append(mean(self.queue_throttle))
+            self.cmdb.append(mean(self.queue_braking))
             if(mean(self.queue_velocity) < 0):
                   self.accb.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
                   self.accb2.append(-1*mean(self.queue_acceleration_mov_avg))
