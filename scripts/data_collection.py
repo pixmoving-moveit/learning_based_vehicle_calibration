@@ -7,7 +7,8 @@ import math
 from collections import deque
 from statistics import mean
 
-from pix_hooke_driver_msgs.msg import V2aBrakeStaFb, V2aDriveStaFb, V2aSteerStaFb
+# from pix_hooke_driver_msgs.msg import V2aBrakeStaFb, V2aDriveStaFb, V2aSteerStaFb
+from pix_robobus_driver_msgs.msg import SteeringReport, ThrottleReport, BrakeReport, VcuReport
 from sensor_msgs.msg import Imu
 from can_msgs.msg import Frame
 from std_msgs.msg import Float32
@@ -96,9 +97,10 @@ class primotest(rclpy.node.Node):
 
             #self.timer = self.create_timer(0.02, self.test_callback)
             self.create_subscription(Float32, '/gnss/chc/pitch', self.pitch_topic_callback, 1)
-            self.create_subscription(V2aBrakeStaFb, '/pix_hooke/v2a_brakestafb', self.brake_topic_callback, 1)
-            self.create_subscription(V2aDriveStaFb, '/pix_hooke/v2a_drivestafb', self.drive_topic_callback, 1)
-            self.create_subscription(V2aSteerStaFb, '/pix_hooke/v2a_steerstafb', self.steer_topic_callback, 1)
+            self.create_subscription(BrakeReport, '/pix_robobus/brake_report', self.brake_topic_callback, 1)
+            self.create_subscription(ThrottleReport, '/pix_robobus/throttle_report', self.drive_topic_callback, 1)
+            self.create_subscription(SteeringReport, '/pix_robobus/steering_report', self.steer_topic_callback, 1)
+            self.create_subscription(VcuReport, '/pix_robobus/vcu_report', self.velocity_topic_callback, 1)
             self.create_subscription(Imu, '/gnss/chc/imu', self.imu_topic_callback, 1)
             self.timer = self.create_timer(0.02, self.test_callback)
             
@@ -132,11 +134,16 @@ class primotest(rclpy.node.Node):
                         
                         
                   
-
+      def velocity_topic_callback(self, msg):
+            self.velocity = float(msg.vehicle_speed)
+            if(len(self.queue_velocity)<self.NUM_OF_QUEUE):
+                  self.queue_velocity.append(self.velocity)
+            else:
+                  self.queue_velocity.popleft()
 
       def brake_topic_callback(self, msg):
             
-            self.braking = float(msg.vcu_chassis_brake_padl_fb)
+            self.braking = float(msg.brake_pedal_actual)
             if(len(self.queue_braking)<self.NUM_OF_QUEUE):
                   self.queue_braking.append(self.braking)
             else:
@@ -145,24 +152,17 @@ class primotest(rclpy.node.Node):
 
       def drive_topic_callback(self, msg):
             
-            self.throttling = float(msg.vcu_chassis_throttle_padl_fb)
+            self.throttling = float(msg.dirve_throttle_pedal_actual)
             if(len(self.queue_throttle)<self.NUM_OF_QUEUE):
                   self.queue_throttle.append(self.throttling)
             else:
                   self.queue_throttle.popleft()
-
-            
-            self.velocity = float(msg.vcu_chassis_speed_fb)
-            if(len(self.queue_velocity)<self.NUM_OF_QUEUE):
-                  self.queue_velocity.append(self.velocity)
-            else:
-                  self.queue_velocity.popleft()
                   
                   
 
       def steer_topic_callback(self, msg):
             
-            self.steering = float(msg.vcu_chassis_steer_angle_fb)
+            self.steering = float(msg.steer_angle_actual)
             
             
 
