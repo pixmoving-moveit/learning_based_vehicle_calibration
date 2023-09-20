@@ -51,9 +51,9 @@ y_test = torch.tensor(y_test, dtype=torch.float32)
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
-        self.fc1 = nn.Linear(2, 64)  # Input layer with 2 neurons, hidden layer with n neurons
+        self.fc1 = nn.Linear(2, 128)  # Input layer with 2 neurons, hidden layer with n neurons
         self.sigmoid1 = nn.Sigmoid()
-        self.fc2 = nn.Linear(64, 16)
+        self.fc2 = nn.Linear(128, 16)
         self.sigmoid2 = nn.Sigmoid()
         self.fc3 = nn.Linear(16, 1)  # Output layer with 1 neuron
 
