@@ -11,7 +11,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy.signal import medfilt
 
 # Load the CSV file into a DataFrame
-data = pd.read_csv('throttling_bag_9_15.csv')
+data = pd.read_csv('throttling_testing.csv')
 
 # Standardize data
 
@@ -51,11 +51,12 @@ y_test = torch.tensor(y_test, dtype=torch.float32)
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
-        self.fc1 = nn.Linear(2, 64)  # Input layer with 2 neurons, hidden layer with n neurons
+        self.fc1 = nn.Linear(2, 128)  # Input layer with 2 neurons, hidden layer with n neurons
         self.sigmoid1 = nn.Sigmoid()
-        self.fc2 = nn.Linear(64, 16)
+        self.fc2 = nn.Linear(128, 16)
         self.sigmoid2 = nn.Sigmoid()
         self.fc3 = nn.Linear(16, 1)  # Output layer with 1 neuron
+        
 
     def forward(self, x):
         x = self.fc1(x)
@@ -142,3 +143,25 @@ plt.show()
 
 
 
+from sklearn.metrics import mean_squared_error
+
+# Calculate MSE on the test data
+mse = mean_squared_error(y_test, test_outputs.view(-1).numpy())
+print(f"Mean Squared Error on Test Data: {mse}")
+
+
+from sklearn.metrics import mean_absolute_error
+
+# Calculate MAE on the test data
+mae = mean_absolute_error(y_test, test_outputs.view(-1).numpy())
+print(f"Mean Absolute Error on Test Data: {mae}")
+
+
+rmse = np.sqrt(mse)
+print(f"Root Mean Squared Error on Test Data: {rmse}")
+
+from sklearn.metrics import r2_score
+
+# Calculate R2 score on the test data
+r2 = r2_score(y_test, test_outputs.view(-1).numpy())
+print(f"R-squared (R2) Score on Test Data: {r2}")

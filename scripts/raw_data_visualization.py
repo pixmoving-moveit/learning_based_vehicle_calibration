@@ -4,11 +4,11 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 
 # Read the data
-columns = ["Velocity", "Throttling", "Acceleration_with_pitch_comp"]
-df = pd.read_csv("throttling_bag_9_15.csv", usecols=columns)
+columns = ["Velocity", "Braking", "Acceleration_with_pitch_comp"]
+df = pd.read_csv("braking_testing.csv", usecols=columns)
 
 xdata = df.Velocity
-ydata = df.Throttling
+ydata = df.Braking
 zdata = df.Acceleration_with_pitch_comp
 
 # Fit a linear regression model
@@ -37,6 +37,12 @@ scatter = ax.scatter3D(xdata, ydata, zdata, c=zdata, cmap=cmap, marker='o')
 
 # Plot the plane
 ax.plot_surface(x_grid, y_grid, z_grid, alpha=0.5, cmap=cmap)
+
+# Customize the plot
+ax.set_xlabel('Velocity')
+ax.set_zlabel('Acceleration')
+ax.set_ylabel('Braking Output')
+
 
 # Add color bar to the plot for reference
 cbar = plt.colorbar(sc, ax=ax, label='Acceleration_with_pitch_comp')
