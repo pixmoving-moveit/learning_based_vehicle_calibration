@@ -61,17 +61,17 @@ class primotest(rclpy.node.Node):
             self.pitch_angle = 0.0
 
 
-            self.MAX_DATA = 3000
+            self.MAX_DATA = 4000
             self.NUM_OF_QUEUE = 20
-            self.SPEED_THRESHOLD = 6.0/3.6
+            self.SPEED_THRESHOLD = 15.0/3.6
             self.STEERING_THRESHOLD = 2*20
             self.THROTTLE_DEADZONE = 7
             self.BRAKE_DEADZONE = 7
-            self.MAX_VELOCITY = 22.0/3.6
-            self.THROTTLE_THRESHOLD1 = 20
-            self.THROTTLE_THRESHOLD2 = 40
-            self.BRAKE_THRESHOLD1 = 12
-            self.BRAKE_THRESHOLD2 = 20
+            self.MAX_VELOCITY = 40.0/3.6
+            self.THROTTLE_THRESHOLD1 = 30
+            self.THROTTLE_THRESHOLD2 = 55
+            self.BRAKE_THRESHOLD1 = 15
+            self.BRAKE_THRESHOLD2 = 25
             self.DELAY = 20   
             self.CONSISTENCY_TRESHOLD = 20            
             

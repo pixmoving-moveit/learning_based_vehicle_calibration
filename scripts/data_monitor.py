@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 import rclpy
 import rclpy.node
-from pix_hooke_driver_msgs.msg import V2aBrakeStaFb, V2aDriveStaFb, V2aSteerStaFb
+from pix_robobus_driver_msgs.msg import SteeringReport, ThrottleReport, BrakeReport, VcuReport
 from std_msgs.msg import Float32
 from sensor_msgs.msg import Imu
 from can_msgs.msg import Frame
@@ -19,9 +19,9 @@ class DataMonitor(rclpy.node.Node):
         super().__init__('data_monitor')
 
         self.timer = self.create_timer(1, self.timer_callback)
-        self.create_subscription(V2aBrakeStaFb, '/pix_hooke/v2a_brakestafb', self.brake_topic_callback, 10)
-        self.create_subscription(V2aDriveStaFb, '/pix_hooke/v2a_drivestafb', self.drive_topic_callback, 10)
-        self.create_subscription(V2aSteerStaFb, '/pix_hooke/v2a_steerstafb', self.steer_topic_callback, 10)
+        self.create_subscription(BrakeReport, '/pix_robobus/brake_report', self.brake_topic_callback, 10)
+        self.create_subscription(ThrottleReport, '/pix_robobus/throttle_report', self.drive_topic_callback, 10)
+        self.create_subscription(SteeringReport, '/pix_robobus/steering_report', self.steer_topic_callback, 10)
         self.create_subscription(Float32, '/gnss/chc/pitch', self.pitch_topic_callback, 10)
         self.create_subscription(Imu, '/gnss/chc/imu', self.imu_topic_callback, 10)
         self.create_subscription(Frame, '/from_can_bus', self.can_topic_callback, 10)

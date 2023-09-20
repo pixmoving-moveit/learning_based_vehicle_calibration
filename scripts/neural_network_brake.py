@@ -9,6 +9,9 @@ from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.signal import medfilt
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import r2_score
 
 # Load the CSV file into a DataFrame
 data = pd.read_csv('braking_testing.csv')
@@ -120,6 +123,27 @@ with torch.no_grad():
 commands_new = commands*std2+mean2
     
 
+# Calculate MSE
+#mse = mean_squared_error(y_test, test_outputs.view(-1).numpy())
+#print(f"Mean Squared Error on Test Data: {mse}")
+
+
+# Calculate MAE
+mae = mean_absolute_error(y_test, test_outputs.view(-1).numpy())
+print(f"Mean Absolute Error on Test Data: {mae}")
+
+
+rmse = np.sqrt(mse)
+print(f"Root Mean Squared Error on Test Data: {rmse}")
+
+
+# Calculate R2 score
+r2 = r2_score(y_test, test_outputs.view(-1).numpy())
+print(f"R-squared (R2) Score on Test Data: {r2}")
+
+
+
+
 
 # Create the 3D plot
 fig = plt.figure()
@@ -144,36 +168,6 @@ plt.show()
 
 
 
-
-
-
-
-
-
-
-
-from sklearn.metrics import mean_squared_error
-
-# Calculate MSE on the test data
-mse = mean_squared_error(y_test, test_outputs.view(-1).numpy())
-print(f"Mean Squared Error on Test Data: {mse}")
-
-
-from sklearn.metrics import mean_absolute_error
-
-# Calculate MAE on the test data
-mae = mean_absolute_error(y_test, test_outputs.view(-1).numpy())
-print(f"Mean Absolute Error on Test Data: {mae}")
-
-
-rmse = np.sqrt(mse)
-print(f"Root Mean Squared Error on Test Data: {rmse}")
-
-from sklearn.metrics import r2_score
-
-# Calculate R2 score on the test data
-r2 = r2_score(y_test, test_outputs.view(-1).numpy())
-print(f"R-squared (R2) Score on Test Data: {r2}")
 
 
 
