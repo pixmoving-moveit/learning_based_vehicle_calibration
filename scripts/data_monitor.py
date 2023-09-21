@@ -22,8 +22,8 @@ class DataMonitor(rclpy.node.Node):
         self.create_subscription(BrakeReport, '/pix_robobus/brake_report', self.brake_topic_callback, 10)
         self.create_subscription(ThrottleReport, '/pix_robobus/throttle_report', self.drive_topic_callback, 10)
         self.create_subscription(SteeringReport, '/pix_robobus/steering_report', self.steer_topic_callback, 10)
-        self.create_subscription(Float32, '/gnss/chc/pitch', self.pitch_topic_callback, 10)
-        self.create_subscription(Imu, '/gnss/chc/imu', self.imu_topic_callback, 10)
+        self.create_subscription(Float32, '/sensing/gnss/chc/pitch', self.pitch_topic_callback, 10)
+        self.create_subscription(Imu, '/sensing/gnss/chc/imu', self.imu_topic_callback, 10)
         self.create_subscription(Frame, '/from_can_bus', self.can_topic_callback, 10)
 
 

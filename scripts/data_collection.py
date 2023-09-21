@@ -63,11 +63,11 @@ class primotest(rclpy.node.Node):
 
             self.MAX_DATA = 4000
             self.NUM_OF_QUEUE = 20
-            self.SPEED_THRESHOLD = 15.0/3.6
+            self.SPEED_THRESHOLD = 10.0/3.6
             self.STEERING_THRESHOLD = 2*20
-            self.THROTTLE_DEADZONE = 7
-            self.BRAKE_DEADZONE = 7
-            self.MAX_VELOCITY = 40.0/3.6
+            self.THROTTLE_DEADZONE = 5
+            self.BRAKE_DEADZONE = 5
+            self.MAX_VELOCITY = 35.0/3.6
             self.THROTTLE_THRESHOLD1 = 30
             self.THROTTLE_THRESHOLD2 = 55
             self.BRAKE_THRESHOLD1 = 15
@@ -96,13 +96,15 @@ class primotest(rclpy.node.Node):
             self.progress_bar15 = tqdm(total = self.MAX_DATA, desc = "High speed: Brake > " + str(self.BRAKE_THRESHOLD2) + "            ")
 
             #self.timer = self.create_timer(0.02, self.test_callback)
-            self.create_subscription(Float32, '/gnss/chc/pitch', self.pitch_topic_callback, 1)
+            self.create_subscription(Float32, '/sensing/gnss/chc/pitch', self.pitch_topic_callback, 1)
             self.create_subscription(BrakeReport, '/pix_robobus/brake_report', self.brake_topic_callback, 1)
             self.create_subscription(ThrottleReport, '/pix_robobus/throttle_report', self.drive_topic_callback, 1)
             self.create_subscription(SteeringReport, '/pix_robobus/steering_report', self.steer_topic_callback, 1)
             self.create_subscription(VcuReport, '/pix_robobus/vcu_report', self.velocity_topic_callback, 1)
-            self.create_subscription(Imu, '/gnss/chc/imu', self.imu_topic_callback, 1)
+            self.create_subscription(Imu, '/sensing/gnss/chc/imu', self.imu_topic_callback, 1)
             self.timer = self.create_timer(0.02, self.test_callback)
+
+            # ros2 bag record /sensing/gnss/chc/pitch /pix_robobus/brake_report /pix_robobus/throttle_report /pix_robobus/steering_report /pix_robobus/vcu_report /sensing/gnss/chc/imu
             
             self.queue_velocity = deque()
             self.queue_acceleration = deque()
@@ -199,7 +201,7 @@ class primotest(rclpy.node.Node):
                               
             dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
             df1 = pd.DataFrame(dict1)
-            df1.to_csv('throttling_testing.csv') 
+            df1.to_csv('throttling_final.csv') 
 
             self.throttling_prec = mean(self.queue_throttle)
             
@@ -223,7 +225,7 @@ class primotest(rclpy.node.Node):
                               
             dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch degrees': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
             df2 = pd.DataFrame(dict2)
-            df2.to_csv('braking_testing.csv') 
+            df2.to_csv('braking_final.csv') 
 
             self.braking_prec = mean(self.queue_braking)
             
