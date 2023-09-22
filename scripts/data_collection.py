@@ -201,7 +201,7 @@ class primotest(rclpy.node.Node):
                               
             dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
             df1 = pd.DataFrame(dict1)
-            df1.to_csv('throttling_final.csv') 
+            df1.to_csv('throttling_delay0.csv') 
 
             self.throttling_prec = mean(self.queue_throttle)
             
@@ -225,7 +225,7 @@ class primotest(rclpy.node.Node):
                               
             dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch degrees': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
             df2 = pd.DataFrame(dict2)
-            df2.to_csv('braking_final.csv') 
+            df2.to_csv('braking_delay0.csv') 
 
             self.braking_prec = mean(self.queue_braking)
             

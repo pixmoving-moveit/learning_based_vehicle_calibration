@@ -13,9 +13,9 @@ from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import r2_score
 
+
 # Load the CSV file into a DataFrame
 data = pd.read_csv('braking_robobus_final.csv')
-dataa = pd.read_csv('braking_robobus_final.csv')
 
 # Standardize data
 threshold0 = 2.2
@@ -25,31 +25,22 @@ threshold2 = 1.7
 mean0 = data["Velocity"].mean()
 std0 = data["Velocity"].std()
 data["Velocity"] = (data["Velocity"] - mean0) / std0
-dataa["Velocity"] = (dataa["Velocity"] - mean0) / std0
 
 data = data[abs(data["Velocity"]-mean0) <= std0*threshold0]
-dataa = dataa[abs(dataa["Velocity"]-mean0) <= std0*threshold0]
 
 
 mean1 = data["Braking"].mean()
 std1 = data["Braking"].std()
 data["Braking"] = (data["Braking"] - mean1) / std1
-dataa["Braking"] = (dataa["Braking"] - mean1) / std1
 
 data = data[abs(data["Braking"]-mean1) <= std1*threshold1]
-dataa = dataa[abs(dataa["Braking"]-mean1) <= std1*threshold1]
 
 
 mean2 = data["Acceleration_with_pitch_comp"].mean()
 std2 = data["Acceleration_with_pitch_comp"].std()
 data["Acceleration_with_pitch_comp"] = (data["Acceleration_with_pitch_comp"] - mean2) / std2
-dataa["Acceleration_with_pitch_comp"] = (dataa["Acceleration_with_pitch_comp"] - mean2) / std2
 
 data = data[abs(data["Acceleration_with_pitch_comp"]-mean2) <= std2*threshold2]
-dataa = dataa[abs(dataa["Acceleration_with_pitch_comp"]-mean2) <= std2*threshold2]
-
-
-
 
 
 # Split the data into input features (velocity and acceleration) and target (command)
@@ -70,17 +61,18 @@ y_train = torch.tensor(y_train, dtype=torch.float32)
 X_test = torch.tensor(X_test, dtype=torch.float32)
 y_test = torch.tensor(y_test, dtype=torch.float32)
 
-# Define a custom PyTorch model
 
+
+
+# Define the same custom model class
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
-        self.fc1 = nn.Linear(2, 128)  # Input layer with 2 neurons, hidden layer with n neurons
+        self.fc1 = nn.Linear(2, 128)
         self.sigmoid1 = nn.Sigmoid()
         self.fc2 = nn.Linear(128, 64)
         self.sigmoid2 = nn.Sigmoid()
-        self.fc3 = nn.Linear(64, 1)  # Output layer with 1 neuron
-        
+        self.fc3 = nn.Linear(64, 1)
 
     def forward(self, x):
         x = self.fc1(x)
@@ -93,28 +85,12 @@ class NeuralNetwork(nn.Module):
 # Create an instance of the model
 model = NeuralNetwork()
 
-# Define a loss function and optimizer
-criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+# Load the trained model's state dict
+model.load_state_dict(torch.load('trained_brake_model.pth'))
 
-# Training loop
-num_epochs = 100
-for epoch in range(num_epochs):
-    # Forward pass
-    outputs = model(X_train)
-    
-    loss = criterion(outputs, y_train.view(-1, 1))  # Calculate the loss
+# Put the model in evaluation mode (important for dropout and batch normalization layers)
+model.eval()
 
-    # Backpropagation and optimization
-    optimizer.zero_grad()  # Zero the gradients
-    loss.backward()  # Backpropagate the gradients
-    optimizer.step()  # Update the weights
-
-# Evaluate the model on the test data
-with torch.no_grad():
-    test_outputs = model(X_test)
-    test_loss = criterion(test_outputs, y_test.view(-1, 1))
-    print(f"Mean Squared Error on Test Data: {test_loss.item()}")
 
 # Make predictions on new data
 new_data = np.array([[(4-mean0)/std0, (7-mean1)/std1], [(0.5-mean0)/std0, (50-mean1)/std1]])  # Example new data with velocity and acceleration
@@ -126,12 +102,13 @@ with torch.no_grad():
     for i, pred in enumerate(predictions):
         print(f"Data {i + 1}: {pred.item()}")
 
+
 # Visualization
 # Create a meshgrid for velocity and acceleration
 #velocity_range = np.linspace((X[:, 0]*std0+mean0).min(), (X[:, 0]*std0+mean0).max(), 100)
-#braking_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 100)
 velocity_range = np.linspace(0, (X[:, 0]*std0+mean0).max(), 100)
-braking_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 100)
+#braking_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 100)
+braking_range = np.linspace((X[:, 1]*std1+mean1).min(), 100, 100)
 V, A = np.meshgrid(velocity_range, braking_range)
 
 # Create a grid of input data points for prediction
@@ -146,8 +123,10 @@ with torch.no_grad():
 commands_new = commands*std2+mean2
     
 
-# Save the trained model
-#torch.save(model.state_dict(), 'trained_brake_model.pth')
+# Evaluate the model on the test data
+with torch.no_grad():
+    test_outputs = model(X_test)
+    
 
 
 # Calculate MSE
@@ -169,21 +148,31 @@ r2 = r2_score(y_test, test_outputs.view(-1).numpy())
 print(f"R-squared (R2) Score on Test Data: {r2}")
 
 
+# Create headers for velocity values
+velocity_headers = ['{:.2f}'.format(v) for v in velocity_range]
 
-xdata = dataa.Velocity*std0+mean0
-ydata = dataa.Braking*std1+mean1
-zdata = dataa.Acceleration_with_pitch_comp*std2+mean2
+# Create headers for throttling values
+braking_range /= 100
+braking_headers = ['Throttling {:.2f}'.format(a) for a in braking_range]
+
+# Combine headers for the first row of the CSV
+headers = [''] + velocity_headers
+
+# Add throttling values to the commands_new matrix as the first column
+commands_new_with_throttling = np.column_stack((braking_range, commands_new))
+
+# Save the commands_new matrix along with headers to a CSV file
+csv_filename = 'commands_brake.csv'
+np.savetxt(csv_filename, commands_new_with_throttling, delimiter=',', header=','.join(headers), comments='')
+
+
 
 # Create the 3D plot
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
-
 # Plot the surface
-scatter = ax.scatter3D(xdata, ydata, zdata, c=zdata, marker='o')
 surf = ax.plot_surface(V, A, commands_new, cmap='viridis')
-
-
 
 # Customize the plot
 ax.set_xlabel('Velocity')
@@ -196,11 +185,3 @@ fig.colorbar(surf)
 
 # Show the plot
 plt.show()
-
-
-
-
-
-
-
-

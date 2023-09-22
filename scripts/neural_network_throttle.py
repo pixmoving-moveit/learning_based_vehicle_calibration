@@ -15,21 +15,37 @@ from sklearn.metrics import r2_score
 
 
 # Load the CSV file into a DataFrame
-data = pd.read_csv('throttling_testing.csv')
+data = pd.read_csv('throttling_robobus_final.csv')
+dataa = pd.read_csv('throttling_robobus_final.csv')
 
 # Standardize data
+threshold0 = 1.9
+threshold1 = 2
+threshold2 = 1.8
 
 mean0 = data["Velocity"].mean()
 std0 = data["Velocity"].std()
 data["Velocity"] = (data["Velocity"] - mean0) / std0
+dataa["Velocity"] = (dataa["Velocity"] - mean0) / std0
+
+data = data[abs(data["Velocity"]-mean0) <= std0*threshold0]
+dataa = dataa[abs(dataa["Velocity"]-mean0) <= std0*threshold0]
 
 mean1 = data["Throttling"].mean()
 std1 = data["Throttling"].std()
 data["Throttling"] = (data["Throttling"] - mean1) / std1
+dataa["Throttling"] = (dataa["Throttling"] - mean1) / std1
+
+data = data[abs(data["Throttling"]-mean1) <= std1*threshold1]
+dataa = dataa[abs(dataa["Throttling"]-mean1) <= std1*threshold1]
 
 mean2 = data["Acceleration_with_pitch_comp"].mean()
 std2 = data["Acceleration_with_pitch_comp"].std()
 data["Acceleration_with_pitch_comp"] = (data["Acceleration_with_pitch_comp"] - mean2) / std2
+dataa["Acceleration_with_pitch_comp"] = (dataa["Acceleration_with_pitch_comp"] - mean2) / std2
+
+data = data[abs(data["Acceleration_with_pitch_comp"]-mean2) <= std2*threshold2]
+dataa = dataa[abs(dataa["Acceleration_with_pitch_comp"]-mean2) <= std2*threshold2]
 
 
 # Split the data into input features (velocity and acceleration) and target (command)
@@ -57,9 +73,9 @@ class NeuralNetwork(nn.Module):
         super(NeuralNetwork, self).__init__()
         self.fc1 = nn.Linear(2, 128)  # Input layer with 2 neurons, hidden layer with n neurons
         self.sigmoid1 = nn.Sigmoid()
-        self.fc2 = nn.Linear(128, 16)
+        self.fc2 = nn.Linear(128, 64)
         self.sigmoid2 = nn.Sigmoid()
-        self.fc3 = nn.Linear(16, 1)  # Output layer with 1 neuron
+        self.fc3 = nn.Linear(64, 1)  # Output layer with 1 neuron
         
 
     def forward(self, x):
@@ -125,9 +141,13 @@ commands_new = commands*std2+mean2
 
 
 
+# Save the trained model
+#torch.save(model.state_dict(), 'trained_throttle_model.pth')
+
+
 # Calculate MSE
-#mse = mean_squared_error(y_test, test_outputs.view(-1).numpy())
-#print(f"Mean Squared Error on Test Data: {mse}")
+mse = mean_squared_error(y_test, test_outputs.view(-1).numpy())
+print(f"Mean Squared Error on Test Data: {mse}")
 
 
 # Calculate MAE on the test data
@@ -144,12 +164,17 @@ r2 = r2_score(y_test, test_outputs.view(-1).numpy())
 print(f"R-squared (R2) Score on Test Data: {r2}")
     
 
+xdata = dataa.Velocity*std0+mean0
+ydata = dataa.Throttling*std1+mean1
+zdata = dataa.Acceleration_with_pitch_comp*std2+mean2
+
 
 # Create the 3D plot
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
 # Plot the surface
+scatter = ax.scatter3D(xdata, ydata, zdata, c=zdata, marker='o')
 surf = ax.plot_surface(V, A, commands_new, cmap='viridis')
 
 # Customize the plot
