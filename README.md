@@ -175,6 +175,11 @@ python3 load_brake_model.py
 These scripts will create the acceleration and braking offline tables.
 
 
+Once we have obtained the calibration tables, we can run our vehicle and test their performances by comparing the real velocity of the vehicle with the one tracked by the longitudinal controller (in our case a PID controller). The error between these two velocities should be as close to zero as possible.
+
+We can visualize this error using plotjuggler.
+
+
 
 
 
