@@ -95,7 +95,7 @@ class primotest(rclpy.node.Node):
             self.progress_bar14 = tqdm(total = self.MAX_DATA, desc = "High speed: Brake " + str(self.BRAKE_THRESHOLD1) + " - " + str(self.BRAKE_THRESHOLD2) + "         ")
             self.progress_bar15 = tqdm(total = self.MAX_DATA, desc = "High speed: Brake > " + str(self.BRAKE_THRESHOLD2) + "            ")
 
-            #self.timer = self.create_timer(0.02, self.test_callback)
+            
             self.create_subscription(Float32, '/sensing/gnss/chc/pitch', self.pitch_topic_callback, 1)
             self.create_subscription(BrakeReport, '/pix_robobus/brake_report', self.brake_topic_callback, 1)
             self.create_subscription(ThrottleReport, '/pix_robobus/throttle_report', self.drive_topic_callback, 1)
@@ -104,7 +104,7 @@ class primotest(rclpy.node.Node):
             self.create_subscription(Imu, '/sensing/gnss/chc/imu', self.imu_topic_callback, 1)
             self.timer = self.create_timer(0.02, self.test_callback)
 
-            # ros2 bag record /sensing/gnss/chc/pitch /pix_robobus/brake_report /pix_robobus/throttle_report /pix_robobus/steering_report /pix_robobus/vcu_report /sensing/gnss/chc/imu
+            #make sure to record these data: ros2 bag record /sensing/gnss/chc/pitch /pix_robobus/brake_report /pix_robobus/throttle_report /pix_robobus/steering_report /pix_robobus/vcu_report /sensing/gnss/chc/imu
             
             self.queue_velocity = deque()
             self.queue_acceleration = deque()
@@ -122,16 +122,17 @@ class primotest(rclpy.node.Node):
       def pitch_topic_callback(self, msg):
             
             self.pitch_angle = float(msg.data)
-            if(len(self.queue_pitch_angle)<self.NUM_OF_QUEUE + self.DELAY):
+            # apply a mean filter
+            if(len(self.queue_pitch_angle)<self.NUM_OF_QUEUE):
                   self.queue_pitch_angle.append(self.pitch_angle)
             else:
                   self.queue_pitch_angle.popleft()
                   
-            #compute moving average after delay (we need to acquire NUM_OF_QUEUE + DELAY data first)
-            if(len(self.queue_pitch_angle) == self.NUM_OF_QUEUE + self.DELAY):
-                  self.queue_pitch_angle_mov_avg.clear()
-                  for ush in range(self.DELAY, self.NUM_OF_QUEUE + self.DELAY):
-                        self.queue_pitch_angle_mov_avg.append(self.queue_pitch_angle[ush])
+            # compute moving average after delay (we need to acquire NUM_OF_QUEUE + DELAY data first)
+            #if(len(self.queue_pitch_angle) == self.NUM_OF_QUEUE + self.DELAY):
+                  #self.queue_pitch_angle_mov_avg.clear()
+                  #for ush in range(self.DELAY, self.NUM_OF_QUEUE + self.DELAY):
+                        #self.queue_pitch_angle_mov_avg.append(self.queue_pitch_angle[ush])
             
                         
                         
@@ -171,16 +172,16 @@ class primotest(rclpy.node.Node):
       def imu_topic_callback(self, msg):
             
             self.acceleration = float(msg.linear_acceleration.x)
-            if(len(self.queue_acceleration)<self.NUM_OF_QUEUE + self.DELAY):
+            if(len(self.queue_acceleration)<self.NUM_OF_QUEUE):
                   self.queue_acceleration.append(self.acceleration)
             else:
                   self.queue_acceleration.popleft()
                   
             #compute moving average after delay (we need to acquire NUM_OF_QUEUE + DELAY data first)
-            if(len(self.queue_acceleration) == self.NUM_OF_QUEUE + self.DELAY):
-                  self.queue_acceleration_mov_avg.clear()
-                  for ush in range(self.DELAY, self.NUM_OF_QUEUE + self.DELAY):
-                        self.queue_acceleration_mov_avg.append(self.queue_acceleration[ush])
+            #if(len(self.queue_acceleration) == self.NUM_OF_QUEUE + self.DELAY):
+                  #self.queue_acceleration_mov_avg.clear()
+                  #for ush in range(self.DELAY, self.NUM_OF_QUEUE + self.DELAY):
+                        #self.queue_acceleration_mov_avg.append(self.queue_acceleration[ush])
                         
                         
                         
@@ -189,19 +190,19 @@ class primotest(rclpy.node.Node):
             self.vel.append(abs(mean(self.queue_velocity)))
             self.cmd.append(mean(self.queue_throttle))
             if(mean(self.queue_velocity) < 0):
-                  self.acc.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                  self.acc2.append(-1*mean(self.queue_acceleration_mov_avg))
-                  self.pitch.append(-1*mean(self.queue_pitch_angle_mov_avg))
+                  self.acc.append(-1*mean(self.queue_acceleration)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle))))
+                  self.acc2.append(-1*mean(self.queue_acceleration))
+                  self.pitch.append(-1*mean(self.queue_pitch_angle))
             else:
-                  self.acc.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                  self.acc2.append(mean(self.queue_acceleration_mov_avg))
-                  self.pitch.append(mean(self.queue_pitch_angle_mov_avg))
+                  self.acc.append(mean(self.queue_acceleration)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle))))
+                  self.acc2.append(mean(self.queue_acceleration))
+                  self.pitch.append(mean(self.queue_pitch_angle))
                               
                               
-                              
+            # save data in csv file                 
             dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
             df1 = pd.DataFrame(dict1)
-            df1.to_csv('throttling_delay0.csv') 
+            df1.to_csv('throttling.csv') 
 
             self.throttling_prec = mean(self.queue_throttle)
             
@@ -213,19 +214,19 @@ class primotest(rclpy.node.Node):
             self.velb.append(abs(mean(self.queue_velocity)))
             self.cmdb.append(mean(self.queue_braking))
             if(mean(self.queue_velocity) < 0):
-                  self.accb.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                  self.accb2.append(-1*mean(self.queue_acceleration_mov_avg))
-                  self.pitch2.append(-1*mean(self.queue_pitch_angle_mov_avg))
+                  self.accb.append(-1*mean(self.queue_acceleration)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle))))
+                  self.accb2.append(-1*mean(self.queue_acceleration))
+                  self.pitch2.append(-1*mean(self.queue_pitch_angle))
             else:
-                  self.accb.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                  self.accb2.append(mean(self.queue_acceleration_mov_avg))
-                  self.pitch2.append(mean(self.queue_pitch_angle_mov_avg))
+                  self.accb.append(mean(self.queue_acceleration)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle))))
+                  self.accb2.append(mean(self.queue_acceleration))
+                  self.pitch2.append(mean(self.queue_pitch_angle))
                               
                               
                               
             dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch degrees': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
             df2 = pd.DataFrame(dict2)
-            df2.to_csv('braking_delay0.csv') 
+            df2.to_csv('braking.csv') 
 
             self.braking_prec = mean(self.queue_braking)
             
@@ -244,7 +245,7 @@ class primotest(rclpy.node.Node):
             
             # THROTTLING SCENARIO to train throttling model
 
-            if(self.braking == 0 and abs(self.steering) < self.STEERING_THRESHOLD): # and abs(self.throttling_prec-mean(self.queue_throttle)) <= self.CONSISTENCY_TRESHOLD):
+            if(self.braking == 0 and abs(self.steering) < self.STEERING_THRESHOLD and abs(self.throttling_prec-mean(self.queue_throttle)) <= self.CONSISTENCY_TRESHOLD):
                   
                   #low velocity scenario
 
@@ -339,7 +340,7 @@ class primotest(rclpy.node.Node):
 
             # BRAKING SCENARIO to train braking model
 
-            if(self.throttling == 0 and abs(self.steering) < self.STEERING_THRESHOLD): #and abs(self.braking_prec-mean(self.queue_braking)) <= self.CONSISTENCY_TRESHOLD):
+            if(self.throttling == 0 and abs(self.steering) < self.STEERING_THRESHOLD and abs(self.braking_prec-mean(self.queue_braking)) <= self.CONSISTENCY_TRESHOLD):
                   
                   #low velocity scenario
 
