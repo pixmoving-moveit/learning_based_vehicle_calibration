@@ -12,6 +12,7 @@ from scipy.signal import medfilt
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import r2_score
+import matplotlib.cm as cm
 
 
 data = pd.read_csv('throttling_robobus_final.csv')
@@ -47,18 +48,18 @@ dataa["Acceleration_with_pitch_comp"] = (dataa["Acceleration_with_pitch_comp"] -
 data = data[abs(data["Acceleration_with_pitch_comp"]-mean2) <= std2*threshold2]
 dataa = dataa[abs(dataa["Acceleration_with_pitch_comp"]-mean2) <= std2*threshold2]
 
-mean3 = data["Steering"].mean()
-std3 = data["Steering"].std()
-data["Steering"] = (data["Steering"] - mean3) / std3
-dataa["Steering"] = (dataa["Steering"] - mean3) / std3
+mean3 = data["Pitch_angle"].mean()
+std3 = data["Pitch_angle"].std()
+data["Pitch_angle"] = (data["Pitch_angle"] - mean3) / std3
+dataa["Pitch_angle"] = (dataa["Pitch_angle"] - mean3) / std3
 
-data = data[abs(data["Steering"] - mean3) <= std3*threshold3]
-dataa = dataa[abs(dataa["Steering"]-mean3) <= std3*threshold3]
+data = data[abs(data["Pitch_angle"] - mean3) <= std3*threshold3]
+dataa = dataa[abs(dataa["Pitch_angle"]-mean3) <= std3*threshold3]
 
 
 # Split the data into input features (velocity and throttle) and target (acceleration) and test/train
 
-X = data[['Velocity', 'Throttling', 'Steering']].values
+X = data[['Velocity', 'Throttling', 'Pitch_angle']].values
 y = data['Acceleration_with_pitch_comp'].values
 
 
@@ -150,7 +151,7 @@ commands_new = commands*std2+mean2
 
 
 # Save the trained model
-torch.save(model.state_dict(), 'trained_throttle_model.pth')
+torch.save(model.state_dict(), 'trained_throttle_steering.pth')
 
 
 # evaluation
@@ -170,7 +171,7 @@ print(f"R-squared (R2) Score on Test Data: {r2}")
 xdata = dataa.Velocity*std0+mean0
 ydata = dataa.Throttling*std1+mean1
 zdata = dataa.Acceleration_with_pitch_comp*std2+mean2
-kdata = dataa.Steering*std3+mean3
+kdata = dataa.Pitch_angle*std3+mean3
 
 
 
@@ -178,12 +179,12 @@ fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
 scatter = ax.scatter3D(xdata, ydata, zdata, c=kdata, marker='o')
-surf = ax.plot_surface(V, A, S, commands_new, cmap='viridis')
+surf = ax.plot_surface(V, A, S, commands_new, cmap='viridis', alpha=0.7)
 
 ax.set_xlabel('Velocity')
 ax.set_zlabel('Acceleration')
 ax.set_ylabel('Throttling Output')
-ax.set_title('Neural Network Output vs. Velocity and Throttling')
+ax.set_title('Neural Network Output vs. Velocity, Throttling, Steering')
 
 fig.colorbar(surf)
 
