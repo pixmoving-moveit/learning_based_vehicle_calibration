@@ -7,10 +7,9 @@ import math
 from collections import deque
 from statistics import mean
 
-# from pix_hooke_driver_msgs.msg import V2aBrakeStaFb, V2aDriveStaFb, V2aSteerStaFb
-from pix_robobus_driver_msgs.msg import SteeringReport, ThrottleReport, BrakeReport, VcuReport
+from tier4_vehicle_msgs.msg import ActuationCommand
+from autoware_auto_vehicle_msgs.msg import VelocityReport
 from sensor_msgs.msg import Imu
-from can_msgs.msg import Frame
 from std_msgs.msg import Float32
 
 from tqdm import tqdm
@@ -61,7 +60,7 @@ class primotest(rclpy.node.Node):
             self.pitch_angle = 0.0
 
 
-            self.MAX_DATA = 4000
+            self.MAX_DATA = 3000
             self.NUM_OF_QUEUE = 20
             self.SPEED_THRESHOLD = 10.0/3.6
             self.STEERING_THRESHOLD = 2*20
@@ -75,8 +74,7 @@ class primotest(rclpy.node.Node):
             self.DELAY = 20   
             self.CONSISTENCY_TRESHOLD = 20            
             
-
-            self.g = 9.8
+            self.g = 9.80665
 
             self.progress_bar0 = tqdm(total = self.MAX_DATA, desc = "Low speed: 0 - Throttle deadzone  ")
             self.progress_bar1 = tqdm(total = self.MAX_DATA, desc = "Low speed: Throttle deadzone - " + str(self.THROTTLE_THRESHOLD1) + " ")
@@ -97,14 +95,14 @@ class primotest(rclpy.node.Node):
 
             
             self.create_subscription(Float32, '/sensing/gnss/chc/pitch', self.pitch_topic_callback, 1)
-            self.create_subscription(BrakeReport, '/pix_robobus/brake_report', self.brake_topic_callback, 1)
-            self.create_subscription(ThrottleReport, '/pix_robobus/throttle_report', self.drive_topic_callback, 1)
-            self.create_subscription(SteeringReport, '/pix_robobus/steering_report', self.steer_topic_callback, 1)
-            self.create_subscription(VcuReport, '/pix_robobus/vcu_report', self.velocity_topic_callback, 1)
+            self.create_subscription(ActuationCommand, 'actuation_input', self.brake_topic_callback, 1)
+            self.create_subscription(ActuationCommand, 'actuation_input', self.drive_topic_callback, 1)
+            self.create_subscription(ActuationCommand, 'actuation_input', self.steer_topic_callback, 1)
+            self.create_subscription(VelocityReport, 'velocity_input', self.velocity_topic_callback, 1)
             self.create_subscription(Imu, '/sensing/gnss/chc/imu', self.imu_topic_callback, 1)
             self.timer = self.create_timer(0.02, self.test_callback)
 
-            #make sure to record these data: ros2 bag record /sensing/gnss/chc/pitch /pix_robobus/brake_report /pix_robobus/throttle_report /pix_robobus/steering_report /pix_robobus/vcu_report /sensing/gnss/chc/imu
+            # make sure to record these data: ros2 bag record /sensing/gnss/chc/pitch actuation_input velocity_input /sensing/gnss/chc/imu
             
             self.queue_velocity = deque()
             self.queue_acceleration = deque()
@@ -127,26 +125,21 @@ class primotest(rclpy.node.Node):
                   self.queue_pitch_angle.append(self.pitch_angle)
             else:
                   self.queue_pitch_angle.popleft()
-                  
-            # compute moving average after delay (we need to acquire NUM_OF_QUEUE + DELAY data first)
-            #if(len(self.queue_pitch_angle) == self.NUM_OF_QUEUE + self.DELAY):
-                  #self.queue_pitch_angle_mov_avg.clear()
-                  #for ush in range(self.DELAY, self.NUM_OF_QUEUE + self.DELAY):
-                        #self.queue_pitch_angle_mov_avg.append(self.queue_pitch_angle[ush])
             
                         
                         
                   
       def velocity_topic_callback(self, msg):
-            self.velocity = float(msg.vehicle_speed)
+            self.velocity = float(msg.longitudinal_velocity)
             if(len(self.queue_velocity)<self.NUM_OF_QUEUE):
                   self.queue_velocity.append(self.velocity)
             else:
                   self.queue_velocity.popleft()
 
+
       def brake_topic_callback(self, msg):
             
-            self.braking = float(msg.brake_pedal_actual)
+            self.braking = float(msg.brake_cmd)
             if(len(self.queue_braking)<self.NUM_OF_QUEUE):
                   self.queue_braking.append(self.braking)
             else:
@@ -155,7 +148,7 @@ class primotest(rclpy.node.Node):
 
       def drive_topic_callback(self, msg):
             
-            self.throttling = float(msg.dirve_throttle_pedal_actual)
+            self.throttling = float(msg.accel_cmd)
             if(len(self.queue_throttle)<self.NUM_OF_QUEUE):
                   self.queue_throttle.append(self.throttling)
             else:
@@ -165,7 +158,7 @@ class primotest(rclpy.node.Node):
 
       def steer_topic_callback(self, msg):
             
-            self.steering = float(msg.steer_angle_actual)
+            self.steering = float(msg.steer_cmd)
             
             
 
@@ -176,12 +169,6 @@ class primotest(rclpy.node.Node):
                   self.queue_acceleration.append(self.acceleration)
             else:
                   self.queue_acceleration.popleft()
-                  
-            #compute moving average after delay (we need to acquire NUM_OF_QUEUE + DELAY data first)
-            #if(len(self.queue_acceleration) == self.NUM_OF_QUEUE + self.DELAY):
-                  #self.queue_acceleration_mov_avg.clear()
-                  #for ush in range(self.DELAY, self.NUM_OF_QUEUE + self.DELAY):
-                        #self.queue_acceleration_mov_avg.append(self.queue_acceleration[ush])
                         
                         
                         
@@ -200,7 +187,7 @@ class primotest(rclpy.node.Node):
                               
                               
             # save data in csv file                 
-            dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
+            dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch_angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
             df1 = pd.DataFrame(dict1)
             df1.to_csv('throttling.csv') 
 
@@ -224,7 +211,7 @@ class primotest(rclpy.node.Node):
                               
                               
                               
-            dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch degrees': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
+            dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch_angle': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
             df2 = pd.DataFrame(dict2)
             df2.to_csv('braking.csv') 
 

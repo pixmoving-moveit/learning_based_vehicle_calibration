@@ -156,7 +156,7 @@ commands_new = commands*std2+mean2
     
 
 # Save the trained model
-torch.save(model.state_dict(), 'trained_brake_model.pth')
+torch.save(model.state_dict(), 'trained_brake_steering.pth')
 
 
 # evaluation
@@ -189,7 +189,7 @@ surf = ax.plot_surface(V, A, S, commands_new, cmap='viridis')
 ax.set_xlabel('Velocity')
 ax.set_zlabel('Acceleration')
 ax.set_ylabel('Braking Output')
-ax.set_title('Neural Network Output vs. Velocity and Braking')
+ax.set_title('Neural Network Output vs. Velocity, Braking, Steering')
 
 fig.colorbar(surf)
 
