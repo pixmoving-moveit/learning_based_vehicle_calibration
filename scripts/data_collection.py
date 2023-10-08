@@ -95,14 +95,14 @@ class primotest(rclpy.node.Node):
 
             
             self.create_subscription(Float32, '/sensing/gnss/chc/pitch', self.pitch_topic_callback, 1)
-            self.create_subscription(ActuationCommand, 'actuation_input', self.brake_topic_callback, 1)
-            self.create_subscription(ActuationCommand, 'actuation_input', self.drive_topic_callback, 1)
-            self.create_subscription(ActuationCommand, 'actuation_input', self.steer_topic_callback, 1)
-            self.create_subscription(VelocityReport, 'velocity_input', self.velocity_topic_callback, 1)
+            self.create_subscription(ActuationCommand, '/actuation_input', self.brake_topic_callback, 1)
+            self.create_subscription(ActuationCommand, '/actuation_input', self.drive_topic_callback, 1)
+            self.create_subscription(ActuationCommand, '/actuation_input', self.steer_topic_callback, 1)
+            self.create_subscription(VelocityReport, '/velocity_input', self.velocity_topic_callback, 1)
             self.create_subscription(Imu, '/sensing/gnss/chc/imu', self.imu_topic_callback, 1)
             self.timer = self.create_timer(0.02, self.test_callback)
 
-            # make sure to record these data: ros2 bag record /sensing/gnss/chc/pitch actuation_input velocity_input /sensing/gnss/chc/imu
+            # make sure to record these data: ros2 bag record /sensing/gnss/chc/pitch /actuation_input /velocity_input /sensing/gnss/chc/imu
             
             self.queue_velocity = deque()
             self.queue_acceleration = deque()
