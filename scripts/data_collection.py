@@ -63,7 +63,7 @@ class primotest(rclpy.node.Node):
             self.MAX_DATA = 3000
             self.NUM_OF_QUEUE = 20
             self.SPEED_THRESHOLD = 10.0/3.6
-            self.STEERING_THRESHOLD = 2*20
+            self.STEERING_THRESHOLD = 2/25
             self.THROTTLE_DEADZONE = 5
             self.BRAKE_DEADZONE = 5
             self.MAX_VELOCITY = 35.0/3.6

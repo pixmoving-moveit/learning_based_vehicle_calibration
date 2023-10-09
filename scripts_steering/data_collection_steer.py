@@ -40,20 +40,12 @@ class primotest(rclpy.node.Node):
             self.cmd = []
             self.acc = []
             self.acc2 = []
-            self.velb = []
-            self.cmdb = []
-            self.accb = []
-            self.accb2 = []
             self.pitch = []
-            self.pitch2 = []
             self.steer = []
-            self.steerb = []
-            self.flag = 0
             
             
             # data sharing member variables
-            self.braking = 0.0
-            self.braking_prec = 0.0
+            
             self.throttling = 0.0
             self.throttling_prec = 0.0
             self.steering = 0.0
@@ -64,47 +56,37 @@ class primotest(rclpy.node.Node):
 
             self.MAX_DATA = 3000
             self.NUM_OF_QUEUE = 20
-            self.SPEED_THRESHOLD = 10.0/3.6
-            self.THROTTLE_DEADZONE = 5
-            self.BRAKE_DEADZONE = 5
-            self.MAX_VELOCITY = 35.0/3.6
-            self.THROTTLE_THRESHOLD1 = 30
-            self.THROTTLE_THRESHOLD2 = 55
-            self.BRAKE_THRESHOLD1 = 15
-            self.BRAKE_THRESHOLD2 = 25
-            self.DELAY = 20   
-            self.CONSISTENCY_TRESHOLD = 20            
+            self.MAX_VELOCITY = 5.0/3.6
+            self.THROTTLE_THRESHOLD = 10
+            self.CONSISTENCY_TRESHOLD = 20   
+            self.STEERING_THR1 = 0.2
+            self.STEERING_THR2 = 0.4
+            self.STEERING_THR3 = 0.6
+            self.STEERING_THR4 = 0.8         
             
 
-            self.g = 9.8
+            self.g = 9.80665
 
-            self.progress_bar0 = tqdm(total = self.MAX_DATA, desc = "Low speed: 0 - Throttle deadzone  ")
-            self.progress_bar1 = tqdm(total = self.MAX_DATA, desc = "Low speed: Throttle deadzone - " + str(self.THROTTLE_THRESHOLD1) + " ")
-            self.progress_bar2 = tqdm(total = self.MAX_DATA, desc = "Low speed: Throttle " + str(self.THROTTLE_THRESHOLD1) + " - " + str(self.THROTTLE_THRESHOLD2) + "       ")
-            self.progress_bar3 = tqdm(total = self.MAX_DATA, desc = "Low speed: Throttle > " + str(self.THROTTLE_THRESHOLD2) + "          ")
-            self.progress_bar4 = tqdm(total = self.MAX_DATA, desc = "High speed: 0 - Throttle deadzone ")
-            self.progress_bar5 = tqdm(total = self.MAX_DATA, desc = "High speed: Throttle deadzone - " + str(self.THROTTLE_THRESHOLD2))
-            self.progress_bar6 = tqdm(total = self.MAX_DATA, desc = "High speed: Throttle " + str(self.THROTTLE_THRESHOLD1) + " - " + str(self.THROTTLE_THRESHOLD2) + "      ")
-            self.progress_bar7 = tqdm(total = self.MAX_DATA, desc = "High speed: Throttle > " + str(self.THROTTLE_THRESHOLD2) + "         ")
-            self.progress_bar8 = tqdm(total = self.MAX_DATA, desc = "Low speed: 0 - Brake deadzone     ")
-            self.progress_bar9 = tqdm(total = self.MAX_DATA, desc = "Low speed: Brake deadzone - " + str(self.BRAKE_THRESHOLD1) + "    ")
-            self.progress_bar10 = tqdm(total = self.MAX_DATA, desc = "Low speed: Brake " + str(self.BRAKE_THRESHOLD1) + " - " + str(self.BRAKE_THRESHOLD2) + "          ") 
-            self.progress_bar11 = tqdm(total = self.MAX_DATA, desc = "Low speed: Brake > " + str(self.BRAKE_THRESHOLD2) + "             ")
-            self.progress_bar12 = tqdm(total = self.MAX_DATA, desc = "High speed: 0 - Brake deadzone    ")
-            self.progress_bar13 = tqdm(total = self.MAX_DATA, desc = "High speed: Brake deadzone - " + str(self.BRAKE_THRESHOLD1) + "   ")
-            self.progress_bar14 = tqdm(total = self.MAX_DATA, desc = "High speed: Brake " + str(self.BRAKE_THRESHOLD1) + " - " + str(self.BRAKE_THRESHOLD2) + "         ")
-            self.progress_bar15 = tqdm(total = self.MAX_DATA, desc = "High speed: Brake > " + str(self.BRAKE_THRESHOLD2) + "            ")
+            self.progress_bar0 = tqdm(total = self.MAX_DATA, desc = "Low throttle | Steering: 0 - " + str(self.STEERING_THR1) + " ")
+            self.progress_bar1 = tqdm(total = self.MAX_DATA, desc = "Low throttle | Steering: " + str(self.STEERING_THR1) + " - " + str(self.STEERING_THR2) + " ")
+            self.progress_bar2 = tqdm(total = self.MAX_DATA, desc = "Low throttle | Steering: " + str(self.STEERING_THR2) + " - " + str(self.STEERING_THR3) + "       ")
+            self.progress_bar3 = tqdm(total = self.MAX_DATA, desc = "Low throttle | Steering: " + str(self.STEERING_THR3) + " - " + str(self.STEERING_THR4) + "    ")
+            self.progress_bar4 = tqdm(total = self.MAX_DATA, desc = "Low throttle | Steering: " + str(self.STEERING_THR4) + " - 1    ")
+            self.progress_bar5 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: 0 - " + str(self.STEERING_THR1) + " ")
+            self.progress_bar6 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR1) + " - " + str(self.STEERING_THR2) + "      ")
+            self.progress_bar7 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR2) + " - " + str(self.STEERING_THR3) + "  ")
+            self.progress_bar8 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR3) + " - " + str(self.STEERING_THR4) + " ")
+            self.progress_bar9 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR4) + " - 1   ")
 
             
             self.create_subscription(Float32, '/sensing/gnss/chc/pitch', self.pitch_topic_callback, 1)
-            self.create_subscription(ActuationCommand, 'actuation_input', self.brake_topic_callback, 1)
-            self.create_subscription(ActuationCommand, 'actuation_input', self.drive_topic_callback, 1)
-            self.create_subscription(ActuationCommand, 'actuation_input', self.steer_topic_callback, 1)
-            self.create_subscription(VelocityReport, 'velocity_input', self.velocity_topic_callback, 1)
+            self.create_subscription(ActuationCommand, '/actuation_input', self.drive_topic_callback, 1)
+            self.create_subscription(ActuationCommand, '/actuation_input', self.steer_topic_callback, 1)
+            self.create_subscription(VelocityReport, '/velocity_input', self.velocity_topic_callback, 1)
             self.create_subscription(Imu, '/sensing/gnss/chc/imu', self.imu_topic_callback, 1)
             self.timer = self.create_timer(0.02, self.test_callback)
 
-            # make sure to record these data: ros2 bag record /sensing/gnss/chc/pitch actuation_input velocity_input /sensing/gnss/chc/imu
+            # make sure to record these data: ros2 bag record /sensing/gnss/chc/pitch /actuation_input /velocity_input /sensing/gnss/chc/imu
             
             self.queue_velocity = deque()
             self.queue_acceleration = deque()
@@ -112,7 +94,6 @@ class primotest(rclpy.node.Node):
             self.queue_pitch_angle = deque()
             self.queue_pitch_angle_mov_avg = deque()
             self.queue_throttle = deque()
-            self.queue_braking = deque()
             self.queue_steering = deque()
             
             
@@ -141,13 +122,6 @@ class primotest(rclpy.node.Node):
                   self.queue_velocity.popleft()
 
 
-      def brake_topic_callback(self, msg):
-            
-            self.braking = float(msg.brake_cmd)
-            if(len(self.queue_braking)<self.NUM_OF_QUEUE):
-                  self.queue_braking.append(self.braking)
-            else:
-                  self.queue_braking.popleft()
                   
 
       def drive_topic_callback(self, msg):
@@ -183,11 +157,11 @@ class primotest(rclpy.node.Node):
                         
                         
                         
-      def collection_throttling(self):
+      def collection_steering(self):
             
             self.vel.append(abs(mean(self.queue_velocity)))
             self.cmd.append(mean(self.queue_throttle))
-            self.steer.append(mean(self.queue_steering))
+            self.steer.append(abs(mean(self.queue_steering)))
             if(mean(self.queue_velocity) < 0):
                   self.acc.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
                   self.acc2.append(-1*mean(self.queue_acceleration_mov_avg))
@@ -201,34 +175,14 @@ class primotest(rclpy.node.Node):
             # save data in csv file                 
             dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Steering': self.steer, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch_angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
             df1 = pd.DataFrame(dict1)
-            df1.to_csv('throttling_steer.csv') 
+            df1.to_csv('steering.csv') 
 
             self.throttling_prec = mean(self.queue_throttle)
             
             
             
             
-      def collection_braking(self):
-            
-            self.velb.append(abs(mean(self.queue_velocity)))
-            self.cmdb.append(mean(self.queue_braking))
-            self.steerb.append(mean(self.queue_steering))
-            if(mean(self.queue_velocity) < 0):
-                  self.accb.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                  self.accb2.append(-1*mean(self.queue_acceleration_mov_avg))
-                  self.pitch2.append(-1*mean(self.queue_pitch_angle_mov_avg))
-            else:
-                  self.accb.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                  self.accb2.append(mean(self.queue_acceleration_mov_avg))
-                  self.pitch2.append(mean(self.queue_pitch_angle_mov_avg))
-                              
-                              
-                              
-            dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Steering': self.steerb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch_angle': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
-            df2 = pd.DataFrame(dict2)
-            df2.to_csv('braking_steer.csv') 
-
-            self.braking_prec = mean(self.queue_braking)
+     
             
             
             
@@ -243,192 +197,107 @@ class primotest(rclpy.node.Node):
       def test_callback(self):
             
             
-            # THROTTLING SCENARIO to train throttling model
+            
 
-            if(self.braking == 0 and abs(self.throttling_prec-mean(self.queue_throttle)) <= self.CONSISTENCY_TRESHOLD):
+            if(0 < abs(self.velocity) <= self.MAX_VELOCITY and abs(self.throttling_prec-mean(self.queue_throttle)) <= self.CONSISTENCY_TRESHOLD):
                   
                   #low velocity scenario
 
-                  if(0 < abs(self.velocity) <= self.SPEED_THRESHOLD):
+                  if(self.throttling <= self.THROTTLE_THRESHOLD):
                         
-                        if(0 <= self.throttling <= self.THROTTLE_DEADZONE and self.k < self.MAX_DATA and self.flag == 0):
+                        if(0 < abs(self.steering) <= self.STEERING_THR1 and self.k < self.MAX_DATA):
                               
-                              self.collection_throttling()
+                              self.collection_steering()
                               
                               self.progress_bar0.update(1)
                               
                               self.k += 1
 
                         
-                        elif(self.THROTTLE_DEADZONE < self.throttling <= self.THROTTLE_THRESHOLD1 and self.i < self.MAX_DATA):
+                        elif(self.STEERING_THR1 < abs(self.steering) <= self.STEERING_THR2 and self.i < self.MAX_DATA):
                               
-                              self.collection_throttling()
+                              self.collection_steering()
                               
                               self.progress_bar1.update(1)
-                              self.flag = 0
                               
                               self.i += 1
 
 
-                        elif(self.THROTTLE_THRESHOLD1 < self.throttling <= self.THROTTLE_THRESHOLD2 and self.j < self.MAX_DATA):
+                        elif(self.STEERING_THR2 < abs(self.steering) <= self.STEERING_THR3 and self.j < self.MAX_DATA):
                               
-                              self.collection_throttling()
+                              self.collection_steering()
                               
                               self.progress_bar2.update(1)
-                              self.flag = 0
                              
                               self.j += 1
 
 
-                        elif(self.throttling > self.THROTTLE_THRESHOLD2 and self.h < self.MAX_DATA):
+                        elif(self.STEERING_THR3 < abs(self.throttling) <= self.STEERING_THR4 and self.h < self.MAX_DATA):
                               
-                              self.collection_throttling()
+                              self.collection_steering()
                               
                               self.progress_bar3.update(1)
-                              self.flag = 0
                               
                               self.h += 1
 
 
-                  #high velocity scenario
+                        elif(abs(self.steering) > self.STEERING_THR4 and self.a < self.MAX_DATA):
 
-                  elif(self.SPEED_THRESHOLD < abs(self.velocity) <= self.MAX_VELOCITY):
-                        
-                        if(0 <= self.throttling <= self.THROTTLE_DEADZONE and self.d < self.MAX_DATA and self.flag == 0):
-                              
-                              self.collection_throttling()
-                              
+                              self.collection_steering()
+
                               self.progress_bar4.update(1)
-                              
-                              self.d += 1
 
-
-                        elif(self.THROTTLE_DEADZONE < self.throttling <= self.THROTTLE_THRESHOLD1 and self.a < self.MAX_DATA):
-                              
-                              self.collection_throttling()
-                              
-                              self.progress_bar5.update(1)
-                              self.flag = 0
-                              
                               self.a += 1
 
 
-                        elif(self.THROTTLE_THRESHOLD1 < self.throttling <= self.THROTTLE_THRESHOLD2 and self.b < self.MAX_DATA):
-                              
-                              self.collection_throttling()
-                              
-                              self.progress_bar6.update(1)
-                              self.flag = 0
-                           
-                              self.b += 1
+                  #high velocity scenario
 
-                        elif(self.throttling > self.THROTTLE_THRESHOLD2 and self.c < self.MAX_DATA):
-                              
-                              self.collection_throttling()
-                              
-                              self.progress_bar7.update(1)
-                              self.flag = 0
-                              
-                              self.c += 1
-
-
-            
-            
-            
-
-
-
-            # BRAKING SCENARIO to train braking model
-
-            if(self.throttling == 0 and abs(self.braking_prec-mean(self.queue_braking)) <= self.CONSISTENCY_TRESHOLD):
-                  
-                  #low velocity scenario
-
-                  if(0 < abs(self.velocity) <= self.SPEED_THRESHOLD):
+                  elif(self.throttling > self.THROTTLE_THRESHOLD):
                         
-                        if(0 <= self.braking <= self.BRAKE_DEADZONE and self.kk < self.MAX_DATA and self.flag == 1):
+                        if(0 < abs(self.steering) <= self.STEERING_THR1 and self.kk < self.MAX_DATA):
                               
-                              self.collection_braking()
+                              self.collection_steering()
                               
-                              self.progress_bar8.update(1)
+                              self.progress_bar5.update(1)
                               
                               self.kk += 1
 
-
-                        elif(self.BRAKE_DEADZONE < self.braking <= self.BRAKE_THRESHOLD1 and self.ii < self.MAX_DATA):
+                        
+                        elif(self.STEERING_THR1 < abs(self.steering) <= self.STEERING_THR2 and self.ii < self.MAX_DATA):
                               
-                              self.collection_braking()
+                              self.collection_steering()
                               
-                              self.progress_bar9.update(1)
-                              self.flag = 1
+                              self.progress_bar6.update(1)
                               
                               self.ii += 1
 
 
-                        elif(self.BRAKE_THRESHOLD1 < self.braking <= self.BRAKE_THRESHOLD2 and self.jj < self.MAX_DATA):
+                        elif(self.STEERING_THR2 < abs(self.steering) <= self.STEERING_THR3 and self.jj < self.MAX_DATA):
                               
-                              self.collection_braking()
+                              self.collection_steering()
                               
-                              self.progress_bar10.update(1)
-                              self.flag = 1
-                              
+                              self.progress_bar7.update(1)
+                             
                               self.jj += 1
 
 
-                        elif(self.braking > self.BRAKE_THRESHOLD2 and self.hh < self.MAX_DATA):
+                        elif(self.STEERING_THR3 < abs(self.throttling) <= self.STEERING_THR4 and self.hh < self.MAX_DATA):
                               
-                              self.collection_braking()
+                              self.collection_steering()
                               
-                              self.progress_bar11.update(1)
-                              self.flag = 1
+                              self.progress_bar8.update(1)
                               
                               self.hh += 1
 
 
-                  #high velocity scenario
+                        elif(abs(self.steering) > self.STEERING_THR4 and self.aa < self.MAX_DATA):
 
-                  elif(self.SPEED_THRESHOLD < abs(self.velocity) <= self.MAX_VELOCITY):
-                        
-                        if(0 <= self.braking <= self.BRAKE_DEADZONE and self.dd < self.MAX_DATA and self.flag == 1):
-                              
-                              self.collection_braking()
-                              
-                              self.progress_bar12.update(1)
-                              
-                              self.dd += 1
+                              self.collection_steering()
 
-                        elif(self.BRAKE_DEADZONE < self.braking <= self.BRAKE_THRESHOLD1 and self.aa < self.MAX_DATA):
-                              
-                              self.collection_braking()
-                              
-                              self.progress_bar13.update(1)
-                              self.flag = 1
-                             
-                              self.aa += 1
+                              self.progress_bar9.update(1)
 
+                              self.a += 1
 
-                        elif(self.BRAKE_THRESHOLD1 < self.braking <= self.BRAKE_THRESHOLD2 and self.bb < self.MAX_DATA):
-                              
-                              self.collection_braking()
-                              
-                              self.progress_bar14.update(1)
-                              self.flag = 1
-                              
-                              self.bb += 1
-                              
-
-                        elif(self.braking > self.BRAKE_THRESHOLD2 and self.cc < self.MAX_DATA):
-                              
-                              self.collection_braking()
-                              
-                              self.progress_bar15.update(1)
-                              self.flag = 1  
-                              
-                              self.cc += 1  
-
-
-            
-            
 
                               
                               
