@@ -19,18 +19,15 @@ from std_msgs.msg import Float32
 class ConvertMessage(rclpy.node.Node):
     
     def __init__(self):
-
-        self.brake_value = 0
-        self.throttle_value = 0
-        self.steering_value = 0
-        self.velocity = 0
-
+        super().__init__('convert_robobus_message')
+        self.brake_value = 0.0
+        self.throttle_value = 0.0
+        self.steering_value = 0.0
+        self.velocity = 0.0
         self.create_subscription(BrakeReport, '/pix_robobus/brake_report', self.brake_topic_callback, 1)
         self.create_subscription(ThrottleReport, '/pix_robobus/throttle_report', self.drive_topic_callback, 1)
         self.create_subscription(SteeringReport, '/pix_robobus/steering_report', self.steer_topic_callback, 1)
         self.create_subscription(VcuReport, '/pix_robobus/vcu_report', self.velocity_topic_callback, 1)
-
-
         self.actuation_pub = self.create_publisher(ActuationCommand, 'actuation_input', 10)
         self.velocity_pub = self.create_publisher(VelocityReport, 'velocity_input', 10)
 
@@ -51,7 +48,7 @@ class ConvertMessage(rclpy.node.Node):
         self.velocity = float(msg.vehicle_speed)
 
 
-    def time_callback(self, msg):
+    def time_callback(self):
         actua = ActuationCommand()
         actua.accel_cmd = self.throttle_value
         actua.brake_cmd = self.brake_value
@@ -63,10 +60,17 @@ class ConvertMessage(rclpy.node.Node):
         self.velocity_pub.publish(velocity)
 
 
+
+
+
 def main():
       rclpy.init()
       node = ConvertMessage()
       rclpy.spin(node)
 
+
+
+
 if __name__ == '__main__':
       main()
+

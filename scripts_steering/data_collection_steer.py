@@ -25,17 +25,11 @@ class primotest(rclpy.node.Node):
             self.h = 0
             self.k = 0
             self.a = 0
-            self.b = 0
-            self.c = 0
-            self.d = 0
             self.ii = 0
             self.jj = 0
             self.hh = 0
             self.kk = 0
             self.aa = 0
-            self.bb = 0
-            self.cc = 0
-            self.dd = 0
             self.vel = []
             self.cmd = []
             self.acc = []
@@ -67,16 +61,16 @@ class primotest(rclpy.node.Node):
 
             self.g = 9.80665
 
-            self.progress_bar0 = tqdm(total = self.MAX_DATA, desc = "Low throttle | Steering: 0 - " + str(self.STEERING_THR1) + " ")
-            self.progress_bar1 = tqdm(total = self.MAX_DATA, desc = "Low throttle | Steering: " + str(self.STEERING_THR1) + " - " + str(self.STEERING_THR2) + " ")
-            self.progress_bar2 = tqdm(total = self.MAX_DATA, desc = "Low throttle | Steering: " + str(self.STEERING_THR2) + " - " + str(self.STEERING_THR3) + "       ")
-            self.progress_bar3 = tqdm(total = self.MAX_DATA, desc = "Low throttle | Steering: " + str(self.STEERING_THR3) + " - " + str(self.STEERING_THR4) + "    ")
-            self.progress_bar4 = tqdm(total = self.MAX_DATA, desc = "Low throttle | Steering: " + str(self.STEERING_THR4) + " - 1    ")
-            self.progress_bar5 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: 0 - " + str(self.STEERING_THR1) + " ")
-            self.progress_bar6 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR1) + " - " + str(self.STEERING_THR2) + "      ")
-            self.progress_bar7 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR2) + " - " + str(self.STEERING_THR3) + "  ")
-            self.progress_bar8 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR3) + " - " + str(self.STEERING_THR4) + " ")
-            self.progress_bar9 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR4) + " - 1   ")
+            self.progress_bar0 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering: 0.0 - " + str(self.STEERING_THR1))
+            self.progress_bar1 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering: " + str(self.STEERING_THR1) + " - " + str(self.STEERING_THR2))
+            self.progress_bar2 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering: " + str(self.STEERING_THR2) + " - " + str(self.STEERING_THR3))
+            self.progress_bar3 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering: " + str(self.STEERING_THR3) + " - " + str(self.STEERING_THR4))
+            self.progress_bar4 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering: " + str(self.STEERING_THR4) + " - 1.0")
+            self.progress_bar5 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: 0.0 - " + str(self.STEERING_THR1))
+            self.progress_bar6 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR1) + " - " + str(self.STEERING_THR2))
+            self.progress_bar7 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR2) + " - " + str(self.STEERING_THR3))
+            self.progress_bar8 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR3) + " - " + str(self.STEERING_THR4))
+            self.progress_bar9 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR4) + " - 1.0")
 
             
             self.create_subscription(Float32, '/sensing/gnss/chc/pitch', self.pitch_topic_callback, 1)
@@ -105,7 +99,7 @@ class primotest(rclpy.node.Node):
             
             self.pitch_angle = float(msg.data)
             # apply a mean filter
-            if(len(self.queue_pitch_angle)<self.NUM_OF_QUEUE + self.DELAY):
+            if(len(self.queue_pitch_angle)<self.NUM_OF_QUEUE):
                   self.queue_pitch_angle.append(self.pitch_angle)
             else:
                   self.queue_pitch_angle.popleft()
@@ -148,7 +142,7 @@ class primotest(rclpy.node.Node):
       def imu_topic_callback(self, msg):
             
             self.acceleration = float(msg.linear_acceleration.x)
-            if(len(self.queue_acceleration)<self.NUM_OF_QUEUE + self.DELAY):
+            if(len(self.queue_acceleration)<self.NUM_OF_QUEUE):
                   self.queue_acceleration.append(self.acceleration)
             else:
                   self.queue_acceleration.popleft()
@@ -163,13 +157,13 @@ class primotest(rclpy.node.Node):
             self.cmd.append(mean(self.queue_throttle))
             self.steer.append(abs(mean(self.queue_steering)))
             if(mean(self.queue_velocity) < 0):
-                  self.acc.append(-1*mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                  self.acc2.append(-1*mean(self.queue_acceleration_mov_avg))
-                  self.pitch.append(-1*mean(self.queue_pitch_angle_mov_avg))
+                  self.acc.append(-1*mean(self.queue_acceleration)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle))))
+                  self.acc2.append(-1*mean(self.queue_acceleration))
+                  self.pitch.append(-1*mean(self.queue_pitch_angle))
             else:
-                  self.acc.append(mean(self.queue_acceleration_mov_avg)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle_mov_avg))))
-                  self.acc2.append(mean(self.queue_acceleration_mov_avg))
-                  self.pitch.append(mean(self.queue_pitch_angle_mov_avg))
+                  self.acc.append(mean(self.queue_acceleration)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle))))
+                  self.acc2.append(mean(self.queue_acceleration))
+                  self.pitch.append(mean(self.queue_pitch_angle))
                               
                               
             # save data in csv file                 
@@ -296,7 +290,7 @@ class primotest(rclpy.node.Node):
 
                               self.progress_bar9.update(1)
 
-                              self.a += 1
+                              self.aa += 1
 
 
                               
