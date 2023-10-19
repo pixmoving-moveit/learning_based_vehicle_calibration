@@ -60,6 +60,8 @@ class primotest(rclpy.node.Node):
             self.pitch_angle = 0.0
 
 
+            # here you can tune the parameters according to your needs
+
             self.MAX_DATA = 3000
             self.NUM_OF_QUEUE = 20
             self.SPEED_THRESHOLD = 10.0/3.6
@@ -71,7 +73,6 @@ class primotest(rclpy.node.Node):
             self.THROTTLE_THRESHOLD2 = 55
             self.BRAKE_THRESHOLD1 = 15
             self.BRAKE_THRESHOLD2 = 25
-            self.DELAY = 20   
             self.CONSISTENCY_TRESHOLD = 20            
             
             self.g = 9.80665
@@ -102,7 +103,9 @@ class primotest(rclpy.node.Node):
             self.create_subscription(Imu, '/sensing/gnss/chc/imu', self.imu_topic_callback, 1)
             self.timer = self.create_timer(0.02, self.test_callback)
 
+
             # make sure to record these data: ros2 bag record /sensing/gnss/chc/pitch /actuation_input /velocity_input /sensing/gnss/chc/imu
+            
             
             self.queue_velocity = deque()
             self.queue_acceleration = deque()
@@ -177,7 +180,7 @@ class primotest(rclpy.node.Node):
             self.vel.append(abs(mean(self.queue_velocity)))
             self.cmd.append(mean(self.queue_throttle))
             if(mean(self.queue_velocity) < 0):
-                  self.acc.append(-1*mean(self.queue_acceleration)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle))))
+                  self.acc.append(-1*mean(self.queue_acceleration)-self.g*math.sin(math.radians(-1*mean(self.queue_pitch_angle))))
                   self.acc2.append(-1*mean(self.queue_acceleration))
                   self.pitch.append(-1*mean(self.queue_pitch_angle))
             else:

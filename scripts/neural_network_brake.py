@@ -14,10 +14,11 @@ from sklearn.metrics import r2_score
 data = pd.read_csv('braking.csv')
 dataa = pd.read_csv('braking.csv')
 
-# Standardize data and remove outliers
-threshold0 = 2 #1.9
-threshold1 = 1.9  #1.7
-threshold2 = 1.8  #1.6
+# Standardize data and remove outliers, tune the thresholds according to your needs
+
+threshold0 = 2 
+threshold1 = 1.9  
+threshold2 = 1.8  
 
 mean0 = data["Velocity"].mean()
 std0 = data["Velocity"].std()
@@ -66,7 +67,7 @@ X_test = torch.tensor(X_test, dtype=torch.float32)
 y_test = torch.tensor(y_test, dtype=torch.float32)
 
 
-# NN model
+# NN model (you can use also a 3 layers model)
 
 class NeuralNetwork(nn.Module):
     def __init__(self):
@@ -135,10 +136,11 @@ with torch.no_grad():
 
 # Visualization
 
-#velocity_range = np.linspace((X[:, 0]*std0+mean0).min(), (X[:, 0]*std0+mean0).max(), 100)
-#braking_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 100)
-velocity_range = np.linspace(0, (X[:, 0]*std0+mean0).max(), 100)
-braking_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 100)
+#velocity_range = np.linspace((X[:, 0]*std0+mean0).min(), (X[:, 0]*std0+mean0).max(), 20)
+#braking_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 20)
+
+velocity_range = np.linspace(0, (X[:, 0]*std0+mean0).max(), 20)
+braking_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 20)
 V, A = np.meshgrid(velocity_range, braking_range)
 
 input_grid = np.column_stack(((V.flatten()-mean0)/std0, (A.flatten()-mean1)/std1))

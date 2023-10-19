@@ -30,12 +30,36 @@ class primotest(rclpy.node.Node):
             self.hh = 0
             self.kk = 0
             self.aa = 0
-            self.vel = []
-            self.cmd = []
-            self.acc = []
+            self.vel1 = []
+            self.cmd1 = []
+            self.acc1 = []
+            self.accp1 = []
+            self.pitch1 = []
+            self.steer1 = []
+            self.vel2 = []
+            self.cmd2 = []
             self.acc2 = []
-            self.pitch = []
-            self.steer = []
+            self.accp2 = []
+            self.pitch2 = []
+            self.steer2 = []
+            self.vel3 = []
+            self.cmd3 = []
+            self.acc3 = []
+            self.accp3 = []
+            self.pitch3 = []
+            self.steer3 = []
+            self.vel4 = []
+            self.cmd4 = []
+            self.acc4 = []
+            self.accp4 = []
+            self.pitch4 = []
+            self.steer4 = []
+            self.vel5 = []
+            self.cmd5 = []
+            self.acc5 = []
+            self.accp5 = []
+            self.pitch5 = []
+            self.steer5 = []
             
             
             # data sharing member variables
@@ -48,29 +72,32 @@ class primotest(rclpy.node.Node):
             self.pitch_angle = 0.0
 
 
-            self.MAX_DATA = 3000
-            self.NUM_OF_QUEUE = 20
+            # here you can tune these parameters according to your needs
+
+            self.MAX_DATA = 10000
             self.MAX_VELOCITY = 5.0/3.6
-            self.THROTTLE_THRESHOLD = 10
+            self.THROTTLE_THRESHOLD = 12
             self.CONSISTENCY_TRESHOLD = 20   
-            self.STEERING_THR1 = 0.2
-            self.STEERING_THR2 = 0.4
-            self.STEERING_THR3 = 0.6
-            self.STEERING_THR4 = 0.8         
+            self.STEERING_THR1 = 0.05
+            self.STEERING_THR2 = 0.20
+            self.STEERING_THR3 = 0.40
+            self.STEERING_THR4 = 0.60
+            self.STEERING_THR5 = 0.80 
+
             
 
             self.g = 9.80665
 
-            self.progress_bar0 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering: 0.0 - " + str(self.STEERING_THR1))
-            self.progress_bar1 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering: " + str(self.STEERING_THR1) + " - " + str(self.STEERING_THR2))
-            self.progress_bar2 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering: " + str(self.STEERING_THR2) + " - " + str(self.STEERING_THR3))
-            self.progress_bar3 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering: " + str(self.STEERING_THR3) + " - " + str(self.STEERING_THR4))
-            self.progress_bar4 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering: " + str(self.STEERING_THR4) + " - 1.0")
-            self.progress_bar5 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: 0.0 - " + str(self.STEERING_THR1))
-            self.progress_bar6 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR1) + " - " + str(self.STEERING_THR2))
-            self.progress_bar7 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR2) + " - " + str(self.STEERING_THR3))
-            self.progress_bar8 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR3) + " - " + str(self.STEERING_THR4))
-            self.progress_bar9 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR4) + " - 1.0")
+            self.progress_bar0 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering: " + str(self.STEERING_THR1) + " - " + str(self.STEERING_THR2))
+            self.progress_bar1 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering:  " + str(self.STEERING_THR2) + " - " + str(self.STEERING_THR3))
+            self.progress_bar2 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering:  " + str(self.STEERING_THR3) + " - " + str(self.STEERING_THR4))
+            self.progress_bar3 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering:  " + str(self.STEERING_THR4) + " - " + str(self.STEERING_THR5))
+            self.progress_bar4 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering:  " + str(self.STEERING_THR5) + " - 1.0")
+            self.progress_bar10 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR1) + " - " + str(self.STEERING_THR2))
+            self.progress_bar11 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering:  " + str(self.STEERING_THR2) + " - " + str(self.STEERING_THR3))
+            self.progress_bar12 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering:  " + str(self.STEERING_THR3) + " - " + str(self.STEERING_THR4))
+            self.progress_bar13 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering:  " + str(self.STEERING_THR4) + " - " + str(self.STEERING_THR5))
+            self.progress_bar14 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering:  " + str(self.STEERING_THR5) + " - 1.0")
 
             
             self.create_subscription(Float32, '/sensing/gnss/chc/pitch', self.pitch_topic_callback, 1)
@@ -82,109 +109,165 @@ class primotest(rclpy.node.Node):
 
             # make sure to record these data: ros2 bag record /sensing/gnss/chc/pitch /actuation_input /velocity_input /sensing/gnss/chc/imu
             
-            self.queue_velocity = deque()
-            self.queue_acceleration = deque()
-            self.queue_acceleration_mov_avg = deque()
-            self.queue_pitch_angle = deque()
-            self.queue_pitch_angle_mov_avg = deque()
-            self.queue_throttle = deque()
-            self.queue_steering = deque()
+        
             
             
 
             
-
+      # WE WILL FILTER THE DATA DURING THE POST-PROCESSING, SO IN THIS CASE WE DON'T USE DE QUEUE
 
       def pitch_topic_callback(self, msg):
             
             self.pitch_angle = float(msg.data)
-            # apply a mean filter
-            if(len(self.queue_pitch_angle)<self.NUM_OF_QUEUE):
-                  self.queue_pitch_angle.append(self.pitch_angle)
-            else:
-                  self.queue_pitch_angle.popleft()
-                  
             
-                        
-                        
+                          
                   
       def velocity_topic_callback(self, msg):
             self.velocity = float(msg.longitudinal_velocity)
-            if(len(self.queue_velocity)<self.NUM_OF_QUEUE):
-                  self.queue_velocity.append(self.velocity)
-            else:
-                  self.queue_velocity.popleft()
+            
 
-
-                  
 
       def drive_topic_callback(self, msg):
             
             self.throttling = float(msg.accel_cmd)
-            if(len(self.queue_throttle)<self.NUM_OF_QUEUE):
-                  self.queue_throttle.append(self.throttling)
-            else:
-                  self.queue_throttle.popleft()
                   
                   
 
       def steer_topic_callback(self, msg):
             
             self.steering = float(msg.steer_cmd)
-            if(len(self.queue_steering)<self.NUM_OF_QUEUE):
-                  self.queue_steering.append(self.steering)
-            else:
-                  self.queue_steering.popleft()
-               
-               
+                   
                     
 
       def imu_topic_callback(self, msg):
             
             self.acceleration = float(msg.linear_acceleration.x)
-            if(len(self.queue_acceleration)<self.NUM_OF_QUEUE):
-                  self.queue_acceleration.append(self.acceleration)
-            else:
-                  self.queue_acceleration.popleft()
+        
                   
-
                         
                         
                         
-      def collection_steering(self):
+      def collection_steering1(self):
             
-            self.vel.append(abs(mean(self.queue_velocity)))
-            self.cmd.append(mean(self.queue_throttle))
-            self.steer.append(abs(mean(self.queue_steering)))
-            if(mean(self.queue_velocity) < 0):
-                  self.acc.append(-1*mean(self.queue_acceleration)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle))))
-                  self.acc2.append(-1*mean(self.queue_acceleration))
-                  self.pitch.append(-1*mean(self.queue_pitch_angle))
+            self.vel1.append(abs(self.velocity))
+            self.cmd1.append(self.throttling)
+            self.steer1.append(abs(self.steering))
+            if(self.velocity < 0):
+                  self.acc1.append(-1*self.acceleration-self.g*math.sin(math.radians(-1*self.pitch_angle)))
+                  self.accp1.append(-1*self.acceleration)
+                  self.pitch1.append(-1*self.pitch_angle)
             else:
-                  self.acc.append(mean(self.queue_acceleration)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle))))
-                  self.acc2.append(mean(self.queue_acceleration))
-                  self.pitch.append(mean(self.queue_pitch_angle))
+                  self.acc1.append(self.acceleration-self.g*math.sin(math.radians(self.pitch_angle)))
+                  self.accp1.append(self.acceleration)
+                  self.pitch1.append(self.pitch_angle)
                               
                               
             # save data in csv file                 
-            dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Steering': self.steer, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch_angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
+            dict1 = {'Velocity': self.vel1, 'Throttling': self.cmd1, 'Steering': self.steer1, 'Acceleration_with_pitch_comp': self.acc1, 'Acceleration_measured': self.accp1, 'Pitch_angle': self.pitch1}
             df1 = pd.DataFrame(dict1)
-            df1.to_csv('steering.csv') 
+            df1.to_csv('steering_01.csv') 
 
-            self.throttling_prec = mean(self.queue_throttle)
+            #self.throttling_prec = self.throttling
+
+
+
+      def collection_steering2(self):
             
+            self.vel2.append(abs(self.velocity))
+            self.cmd2.append(self.throttling)
+            self.steer2.append(abs(self.steering))
+            if(self.velocity < 0):
+                  self.acc2.append(-1*self.acceleration-self.g*math.sin(math.radians(-1*self.pitch_angle)))
+                  self.accp2.append(-1*self.acceleration)
+                  self.pitch2.append(-1*self.pitch_angle)
+            else:
+                  self.acc2.append(self.acceleration-self.g*math.sin(math.radians(self.pitch_angle)))
+                  self.accp2.append(self.acceleration)
+                  self.pitch2.append(self.pitch_angle)
+                              
+                              
+            # save data in csv file                 
+            dict2 = {'Velocity': self.vel2, 'Throttling': self.cmd2, 'Steering': self.steer2, 'Acceleration_with_pitch_comp': self.acc2, 'Acceleration_measured': self.accp2, 'Pitch_angle': self.pitch2}
+            df2 = pd.DataFrame(dict2)
+            df2.to_csv('steering_02.csv') 
+
+            #self.throttling_prec = self.throttling     
+
+
+
+      def collection_steering3(self):
             
+            self.vel3.append(abs(self.velocity))
+            self.cmd3.append(self.throttling)
+            self.steer3.append(abs(self.steering))
+            if(self.velocity < 0):
+                  self.acc3.append(-1*self.acceleration-self.g*math.sin(math.radians(-1*self.pitch_angle)))
+                  self.accp3.append(-1*self.acceleration)
+                  self.pitch3.append(-1*self.pitch_angle)
+            else:
+                  self.acc3.append(self.acceleration-self.g*math.sin(math.radians(self.pitch_angle)))
+                  self.accp3.append(self.acceleration)
+                  self.pitch3.append(self.pitch_angle)
+                              
+                              
+            # save data in csv file                 
+            dict3 = {'Velocity': self.vel3, 'Throttling': self.cmd3, 'Steering': self.steer3, 'Acceleration_with_pitch_comp': self.acc3, 'Acceleration_measured': self.accp3, 'Pitch_angle': self.pitch3}
+            df3 = pd.DataFrame(dict3)
+            df3.to_csv('steering_03.csv') 
+
+            #self.throttling_prec = mean(self.queue_throttle)      
+
+
+
+      def collection_steering4(self):
             
+            self.vel4.append(abs(self.velocity))
+            self.cmd4.append(self.throttling)
+            self.steer4.append(abs(self.steering))
+            if(self.velocity < 0):
+                  self.acc4.append(-1*self.acceleration-self.g*math.sin(math.radians(-1*self.pitch_angle)))
+                  self.accp4.append(-1*self.acceleration)
+                  self.pitch4.append(-1*self.pitch_angle)
+            else:
+                  self.acc4.append(self.acceleration-self.g*math.sin(math.radians(self.pitch_angle)))
+                  self.accp4.append(self.acceleration)
+                  self.pitch4.append(self.pitch_angle)
+                              
+                              
+            # save data in csv file                 
+            dict4 = {'Velocity': self.vel4, 'Throttling': self.cmd4, 'Steering': self.steer4, 'Acceleration_with_pitch_comp': self.acc4, 'Acceleration_measured': self.accp4, 'Pitch_angle': self.pitch4}
+            df4 = pd.DataFrame(dict4)
+            df4.to_csv('steering_04.csv') 
+
+            #self.throttling_prec = mean(self.queue_throttle)  
+
+
+
+      def collection_steering5(self):
             
-     
-            
-            
-            
-            
-            
-                  
-                        
-                  
+            self.vel5.append(abs(self.velocity))
+            self.cmd5.append(self.throttling)
+            self.steer5.append(abs(self.steering))
+            if(self.velocity < 0):
+                  self.acc5.append(-1*self.acceleration-self.g*math.sin(math.radians(-1*self.pitch_angle)))
+                  self.accp5.append(-1*self.acceleration)
+                  self.pitch5.append(-1*self.pitch_angle)
+            else:
+                  self.acc5.append(self.acceleration-self.g*math.sin(math.radians(self.pitch_angle)))
+                  self.accp5.append(self.acceleration)
+                  self.pitch5.append(self.pitch_angle)
+                              
+                              
+            # save data in csv file                 
+            dict5 = {'Velocity': self.vel5, 'Throttling': self.cmd5, 'Steering': self.steer5, 'Acceleration_with_pitch_comp': self.acc5, 'Acceleration_measured': self.accp5, 'Pitch_angle': self.pitch5}
+            df5 = pd.DataFrame(dict5)
+            df5.to_csv('steering_05.csv') 
+
+            #self.throttling_prec = mean(self.queue_throttle) 
+
+
+
+
       
 
 
@@ -193,107 +276,110 @@ class primotest(rclpy.node.Node):
             
             
 
-            if(0 < abs(self.velocity) <= self.MAX_VELOCITY and abs(self.throttling_prec-mean(self.queue_throttle)) <= self.CONSISTENCY_TRESHOLD):
+            if(0 < abs(self.velocity) <= self.MAX_VELOCITY): # and abs(self.throttling_prec-mean(self.queue_throttle)) <= self.CONSISTENCY_TRESHOLD):
                   
-                  #low velocity scenario
+                  #low throttling scenario
 
                   if(self.throttling <= self.THROTTLE_THRESHOLD):
                         
-                        if(0 < abs(self.steering) <= self.STEERING_THR1 and self.k < self.MAX_DATA):
+                        if(self.STEERING_THR1 <= abs(self.steering) < self.STEERING_THR2 and self.k < self.MAX_DATA):
                               
-                              self.collection_steering()
+                              self.collection_steering1()
                               
                               self.progress_bar0.update(1)
                               
                               self.k += 1
 
                         
-                        elif(self.STEERING_THR1 < abs(self.steering) <= self.STEERING_THR2 and self.i < self.MAX_DATA):
+                        elif(self.STEERING_THR2 <= abs(self.steering) < self.STEERING_THR3 and self.i < self.MAX_DATA):
                               
-                              self.collection_steering()
+                              self.collection_steering2()
                               
                               self.progress_bar1.update(1)
                               
                               self.i += 1
 
 
-                        elif(self.STEERING_THR2 < abs(self.steering) <= self.STEERING_THR3 and self.j < self.MAX_DATA):
+                        elif(self.STEERING_THR3 <= abs(self.steering) < self.STEERING_THR4 and self.j < self.MAX_DATA):
                               
-                              self.collection_steering()
+                              self.collection_steering3()
                               
                               self.progress_bar2.update(1)
                              
                               self.j += 1
 
 
-                        elif(self.STEERING_THR3 < abs(self.throttling) <= self.STEERING_THR4 and self.h < self.MAX_DATA):
+                        elif(self.STEERING_THR4 <= abs(self.steering) < self.STEERING_THR5 and self.h < self.MAX_DATA):
                               
-                              self.collection_steering()
+                              self.collection_steering4()
                               
                               self.progress_bar3.update(1)
                               
                               self.h += 1
 
 
-                        elif(abs(self.steering) > self.STEERING_THR4 and self.a < self.MAX_DATA):
+                        elif(abs(self.steering) >= self.STEERING_THR5 and self.a < self.MAX_DATA):
 
-                              self.collection_steering()
+                              self.collection_steering5()
 
                               self.progress_bar4.update(1)
 
                               self.a += 1
 
 
-                  #high velocity scenario
+
+
+
+                  #high throttling scenario
 
                   elif(self.throttling > self.THROTTLE_THRESHOLD):
                         
-                        if(0 < abs(self.steering) <= self.STEERING_THR1 and self.kk < self.MAX_DATA):
+                        if(self.STEERING_THR1 <= abs(self.steering) < self.STEERING_THR2 and self.kk < self.MAX_DATA):
                               
-                              self.collection_steering()
+                              self.collection_steering1()
                               
-                              self.progress_bar5.update(1)
+                              self.progress_bar10.update(1)
                               
                               self.kk += 1
 
                         
-                        elif(self.STEERING_THR1 < abs(self.steering) <= self.STEERING_THR2 and self.ii < self.MAX_DATA):
+                        elif(self.STEERING_THR2 <= abs(self.steering) < self.STEERING_THR3 and self.ii < self.MAX_DATA):
                               
-                              self.collection_steering()
+                              self.collection_steering2()
                               
-                              self.progress_bar6.update(1)
+                              self.progress_bar11.update(1)
                               
                               self.ii += 1
 
 
-                        elif(self.STEERING_THR2 < abs(self.steering) <= self.STEERING_THR3 and self.jj < self.MAX_DATA):
+                        elif(self.STEERING_THR3 <= abs(self.steering) < self.STEERING_THR4 and self.jj < self.MAX_DATA):
                               
-                              self.collection_steering()
+                              self.collection_steering3()
                               
-                              self.progress_bar7.update(1)
+                              self.progress_bar12.update(1)
                              
                               self.jj += 1
 
 
-                        elif(self.STEERING_THR3 < abs(self.throttling) <= self.STEERING_THR4 and self.hh < self.MAX_DATA):
+                        elif(self.STEERING_THR4 <= abs(self.steering) < self.STEERING_THR5 and self.hh < self.MAX_DATA):
                               
-                              self.collection_steering()
+                              self.collection_steering4()
                               
-                              self.progress_bar8.update(1)
+                              self.progress_bar13.update(1)
                               
                               self.hh += 1
 
 
-                        elif(abs(self.steering) > self.STEERING_THR4 and self.aa < self.MAX_DATA):
+                        elif(abs(self.steering) >= self.STEERING_THR5 and self.aa < self.MAX_DATA):
 
-                              self.collection_steering()
+                              self.collection_steering5()
 
-                              self.progress_bar9.update(1)
+                              self.progress_bar14.update(1)
 
                               self.aa += 1
 
 
-                              
+                      
                               
                               
 

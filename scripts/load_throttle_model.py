@@ -54,9 +54,9 @@ class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
         self.fc1 = nn.Linear(2, 128)  # Input layer with 2 neurons, hidden layer with n neurons
-        self.relu1 = nn.LogSigmoid()
+        self.relu1 = nn.ReLU()
         self.fc2 = nn.Linear(128, 32)
-        self.relu2 = nn.LogSigmoid()
+        self.relu2 = nn.ReLU()
         self.fc3 = nn.Linear(32, 1)  # Output layer with 1 neuron
         
         
@@ -94,10 +94,11 @@ with torch.no_grad():
 
 # Visualization
 
-#velocity_range = np.linspace((X[:, 0]*std0+mean0).min(), (X[:, 0]*std0+mean0).max(), 100)
-#throttling_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 100)
-velocity_range = np.linspace(0, 9.17, 100)
-throttling_range = np.linspace(0, (X[:, 1]*std1+mean1).max(), 100)
+#velocity_range = np.linspace((X[:, 0]*std0+mean0).min(), (X[:, 0]*std0+mean0).max(), 20)
+#throttling_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 20)
+
+velocity_range = np.linspace(0, (X[:, 0]*std0+mean0).max(), 20)
+throttling_range = np.linspace(0, (X[:, 1]*std1+mean1).max(), 20)
 V, A = np.meshgrid(velocity_range, throttling_range)
 
 input_grid = np.column_stack(((V.flatten()-mean0)/std0, (A.flatten()-mean1)/std1))

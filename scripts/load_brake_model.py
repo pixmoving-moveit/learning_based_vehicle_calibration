@@ -101,10 +101,10 @@ with torch.no_grad():
 
 # Visualization
 
-#velocity_range = np.linspace((X[:, 0]*std0+mean0).min(), (X[:, 0]*std0+mean0).max(), 100)
-velocity_range = np.linspace(0, (X[:, 0]*std0+mean0).max(), 100)
-#braking_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 100)
-braking_range = np.linspace((X[:, 1]*std1+mean1).min(), 100, 100)
+#velocity_range = np.linspace((X[:, 0]*std0+mean0).min(), (X[:, 0]*std0+mean0).max(), 20)
+velocity_range = np.linspace(0, (X[:, 0]*std0+mean0).max(), 20)
+#braking_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 20)
+braking_range = np.linspace((X[:, 1]*std1+mean1).min(), 100, 20)
 V, A = np.meshgrid(velocity_range, braking_range)
 
 
