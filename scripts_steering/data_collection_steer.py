@@ -75,7 +75,7 @@ class primotest(rclpy.node.Node):
             # here you can tune these parameters according to your needs
 
             self.MAX_DATA = 10000
-            self.MAX_VELOCITY = 5.0/3.6
+            self.MAX_VELOCITY = 7.0/3.6
             self.THROTTLE_THRESHOLD = 12
             self.CONSISTENCY_TRESHOLD = 20   
             self.STEERING_THR1 = 0.05

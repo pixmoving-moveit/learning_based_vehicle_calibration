@@ -18,7 +18,7 @@ dataa = pd.read_csv('throttling.csv')
 # Standardize data and remove outliers according to thresholds, you can tune the thresholds according to your needs
 threshold0 = 10 
 threshold1 = 10  
-threshold2 = 5 
+threshold2 = 10
 
 mean0 = data["Velocity"].mean()
 std0 = data["Velocity"].std()

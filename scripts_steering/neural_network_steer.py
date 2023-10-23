@@ -27,9 +27,9 @@ for col in columns:
 
 
 # Standardize data and remove outliers according to thresholds, you can tune the thresholds according to your needs
-threshold0 = 10 
-threshold1 = 10  
-threshold2 = 10 
+threshold0 = 100 
+threshold1 = 100  
+threshold2 = 100 
 
 mean0 = data["Velocity"].mean()
 std0 = data["Velocity"].std()
@@ -140,8 +140,8 @@ with torch.no_grad():
 # Visualization (you can modify the range based on your needs)
 
 velocity_range = np.linspace(0, (X[:, 0]*std0+mean0).max(), 20)
-throttling_range = np.linspace(0, 50, 20)
-# throttling_range = np.linspace(0, (X[:, 1]*std1+mean1).max(), 20)
+# throttling_range = np.linspace(0, 50, 20)
+throttling_range = np.linspace(0, (X[:, 1]*std1+mean1).max(), 20)
 V, A = np.meshgrid(velocity_range, throttling_range)
 
 input_grid = np.column_stack(((V.flatten()-mean0)/std0, (A.flatten()-mean1)/std1))
@@ -188,7 +188,7 @@ commands_new_with_throttling = np.column_stack((throttling_range, commands_new))
 
 # WHEN YOU READ ANOTHER CSV FIRE FOR ANOTHER STEERING CONDITION, RENAME THE FOLLOWING CSV FILE AS WELL!!!
 
-csv_filename = 'accel_map_steering_05_20.csv'
+csv_filename = 'steer_map_05_20.csv'
 np.savetxt(csv_filename, commands_new_with_throttling, delimiter=',', header=','.join(headers), comments='')
     
 

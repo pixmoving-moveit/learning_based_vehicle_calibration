@@ -199,6 +199,11 @@ The blue line is the speed error [m/s] and the red line is the pitch angle [degr
 
 As you can see, the speed error is bounded between ± 0.3m/s, which is pretty good considering that the pitch angle is not constant during the test.
 
+We can also visualize the setpoint (blue line) compared to the measured velocity (red line):
+
+![evaluation1](./imgs/evaluation1.png)
+
+
 We are now ready for the steering calibration tables.
 
 # 2. Lateral Dynamics
@@ -206,7 +211,10 @@ We are now ready for the steering calibration tables.
 Similarly to the Longitudinal Dynamics case, in this module we are going to collect data and train a neural network model to map velocity, throttling command and steering angle into acceleration. Thus, we will have another input, which is the steering angle.
 
 The goal indeed is to calibrate the vehicle's dynamics for low speeds and large steering angles (typically in parking scenarios), and try to obtain a model which can compensate the friction force between the tyres and the road.
-Precisely, when the vehicle has a low speed (we assume less than 5km/h), the larger the steering angle, the higher the friction force so we need a higher throttling command to move the vehicle.
+
+Precisely, when the vehicle has a low speed (we assume less than 5km/h), the larger the steering angle, the higher the friction force so we need a higher throttling command to move the vehicle, as you can see from the following 3D-plot:
+
+![steermap](./imgs/steermap.png)
 
 For this reason, in these conditions, we cannot rely on the calibration map obtained from the Longitudinal Dynamics case, but we need to build new maps that can take into account this friction compensation strategy.
 

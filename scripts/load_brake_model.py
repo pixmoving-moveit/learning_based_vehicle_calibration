@@ -14,8 +14,8 @@ data = pd.read_csv('braking.csv')
 
 # Standardize data and remove outliers according to the thresholds
 threshold0 = 2
-threshold1 = 1.9
-threshold2 = 1.8
+threshold1 = 10
+threshold2 = 10
 
 mean0 = data["Velocity"].mean()
 std0 = data["Velocity"].std()
@@ -48,21 +48,16 @@ X = torch.tensor(X, dtype=torch.float32)
 y = torch.tensor(y, dtype=torch.float32)
 
 
-# NN model
+# NN model (you can use also a 3 layers model)
+
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
-        self.fc1 = nn.Linear(2, 512)  # Input layer with 2 neurons, hidden layer with n neurons
+        self.fc1 = nn.Linear(2, 128)  # Input layer with 2 neurons, hidden layer with n neurons
         self.relu1 = nn.ReLU()
-        self.fc2 = nn.Linear(512, 1024)
+        self.fc2 = nn.Linear(128, 32)
         self.relu2 = nn.ReLU()
-        self.fc3 = nn.Linear(1024, 2048)  
-        self.relu3 = nn.ReLU()
-        self.fc4 = nn.Linear(2048, 256)
-        self.relu4 = nn.ReLU()
-        self.fc5 = nn.Linear(256, 64)
-        self.relu5 = nn.ReLU()
-        self.fc6 = nn.Linear(64, 1)    # Output layer with 1 neuron
+        self.fc3 = nn.Linear(32, 1)      # Output layer with 1 neuron
         
     def forward(self, x):
         x = self.fc1(x)
@@ -70,12 +65,7 @@ class NeuralNetwork(nn.Module):
         x = self.fc2(x)
         x = self.relu2(x)
         x = self.fc3(x)
-        x = self.relu3(x)
-        x = self.fc4(x)
-        x = self.relu4(x)
-        x = self.fc5(x)
-        x = self.relu5(x)
-        x = self.fc6(x)
+        
         return x
 
 
@@ -103,8 +93,8 @@ with torch.no_grad():
 
 #velocity_range = np.linspace((X[:, 0]*std0+mean0).min(), (X[:, 0]*std0+mean0).max(), 20)
 velocity_range = np.linspace(0, (X[:, 0]*std0+mean0).max(), 20)
-#braking_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 20)
-braking_range = np.linspace((X[:, 1]*std1+mean1).min(), 100, 20)
+# braking_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 20)
+braking_range = np.linspace((X[:, 1]*std1+mean1).min(), 80, 20)
 V, A = np.meshgrid(velocity_range, braking_range)
 
 
