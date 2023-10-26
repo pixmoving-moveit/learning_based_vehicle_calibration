@@ -13,7 +13,7 @@ from sklearn.metrics import r2_score
 data = pd.read_csv('braking.csv')
 
 # Standardize data and remove outliers according to the thresholds
-threshold0 = 2
+threshold0 = 1.5
 threshold1 = 10
 threshold2 = 10
 

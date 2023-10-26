@@ -16,7 +16,7 @@ dataa = pd.read_csv('braking.csv')
 
 # Standardize data and remove outliers, tune the thresholds according to your needs
 
-threshold0 = 2
+threshold0 = 1.5
 threshold1 = 10   
 threshold2 = 10  
 
@@ -67,7 +67,7 @@ X_test = torch.tensor(X_test, dtype=torch.float32)
 y_test = torch.tensor(y_test, dtype=torch.float32)
 
 
-# NN model (you can use also a 3 layers model)
+# NN model
 
 class NeuralNetwork(nn.Module):
     def __init__(self):
@@ -76,7 +76,7 @@ class NeuralNetwork(nn.Module):
         self.relu1 = nn.ReLU()
         self.fc2 = nn.Linear(128, 32)
         self.relu2 = nn.ReLU()
-        self.fc3 = nn.Linear(32, 1)      # Output layer with 1 neuron
+        self.fc3 = nn.Linear(32, 1)    # Output layer with 1 neuron
         
     def forward(self, x):
         x = self.fc1(x)
