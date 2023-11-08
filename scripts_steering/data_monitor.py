@@ -19,24 +19,18 @@ class DataMonitor(rclpy.node.Node):
         super().__init__('data_monitor')
 
         self.timer = self.create_timer(1, self.timer_callback)
-        self.create_subscription(BrakeReport, '/pix_robobus/brake_report', self.brake_topic_callback, 10)
+        
         self.create_subscription(ThrottleReport, '/pix_robobus/throttle_report', self.drive_topic_callback, 10)
         self.create_subscription(SteeringReport, '/pix_robobus/steering_report', self.steer_topic_callback, 10)
         self.create_subscription(Float32, '/sensing/gnss/chc/pitch', self.pitch_topic_callback, 10)
         self.create_subscription(Imu, '/sensing/gnss/chc/imu', self.imu_topic_callback, 10)
-        self.create_subscription(Frame, '/from_can_bus', self.can_topic_callback, 10)
+        
 
 
-    def can_topic_callback(self, msg):
-        self.can_timestamp = int(self.get_clock().now().nanoseconds/1000000)
-
-    def brake_topic_callback(self, msg):
-        self.brake_timestamp = int(self.get_clock().now().nanoseconds/1000000)
+    
 
     def drive_topic_callback(self,msg):
-        timestamp = int(self.get_clock().now().nanoseconds/1000000)
-        self.throttle_timestamp = timestamp
-        self.velocity_timestamp = timestamp
+        self.throttle_timestamp = int(self.get_clock().now().nanoseconds/1000000)
     
     def steer_topic_callback(self, msg):
         self.steering_timestamp = int(self.get_clock().now().nanoseconds/1000000)
@@ -54,27 +48,14 @@ class DataMonitor(rclpy.node.Node):
         self.get_logger().info("data monitor checking")
         timestamp = int(self.get_clock().now().nanoseconds/1000000)
         
-        can_timegap = timestamp - self.can_timestamp
-        brake_timegap = timestamp - self.brake_timestamp
+        
         throttle_timegap = timestamp - self.throttle_timestamp
         steering_timegap = timestamp - self.steering_timestamp
         pitch_timegap = timestamp - self.pitch_timestamp
         imu_timegap = timestamp - self.imu_timestamp
         
 
-        if self.can_timestamp == 0:
-            self.get_logger().error("can topic is not publish")
-        elif can_timegap > 1000:
-            self.get_logger().error("can topic is not alive")
-        else:
-            self.get_logger().debug("can topic is good")
-
-        if self.brake_timestamp == 0:
-            self.get_logger().error("brake topic is not publish")
-        elif brake_timegap > 1000:
-            self.get_logger().error("brake topic is not alive")
-        else:
-            self.get_logger().debug("brake topic is good")
+        
 
         if self.throttle_timestamp == 0:
             self.get_logger().error("throttle topic is not publish")

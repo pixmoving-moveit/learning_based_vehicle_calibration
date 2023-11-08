@@ -5,24 +5,32 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from scipy.signal import medfilt
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import r2_score
 import matplotlib.cm as cm
+import math
+from scipy.signal import medfilt
+
+# read the correct csv file
+data = pd.read_csv('steering_01.csv')
+dataa = pd.read_csv('steering_01.csv')
 
 
-data = pd.read_csv('throttling_robobus_final.csv')
-dataa = pd.read_csv('throttling_robobus_final.csv')
+columns = ["Velocity", "Throttling", "Acceleration_with_pitch_comp"]
 
-# Standardize data and remove outliers according to thresholds
-threshold0 = 1.9
-threshold1 = 2
-threshold2 = 1.8
-threshold3 = 2
+# Apply a median filter with a window size of 11 to each column
+window_size = 11
+for col in columns:
+    data[col] = medfilt(data[col], kernel_size=window_size)
+    dataa[col] = medfilt(dataa[col], kernel_size=window_size)
+
+
+# Standardize data and remove outliers according to thresholds, you can tune the thresholds according to your needs
+threshold0 = 100 
+threshold1 = 100  
+threshold2 = 100 
 
 mean0 = data["Velocity"].mean()
 std0 = data["Velocity"].std()
@@ -48,18 +56,11 @@ dataa["Acceleration_with_pitch_comp"] = (dataa["Acceleration_with_pitch_comp"] -
 data = data[abs(data["Acceleration_with_pitch_comp"]-mean2) <= std2*threshold2]
 dataa = dataa[abs(dataa["Acceleration_with_pitch_comp"]-mean2) <= std2*threshold2]
 
-mean3 = data["Pitch_angle"].mean()
-std3 = data["Pitch_angle"].std()
-data["Pitch_angle"] = (data["Pitch_angle"] - mean3) / std3
-dataa["Pitch_angle"] = (dataa["Pitch_angle"] - mean3) / std3
-
-data = data[abs(data["Pitch_angle"] - mean3) <= std3*threshold3]
-dataa = dataa[abs(dataa["Pitch_angle"]-mean3) <= std3*threshold3]
 
 
 # Split the data into input features (velocity and throttle) and target (acceleration) and test/train
 
-X = data[['Velocity', 'Throttling', 'Pitch_angle']].values
+X = data[['Velocity', 'Throttling']].values
 y = data['Acceleration_with_pitch_comp'].values
 
 
@@ -79,26 +80,32 @@ y_test = torch.tensor(y_test, dtype=torch.float32)
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
-        self.fc1 = nn.Linear(3, 128)  # Input layer with 3 neurons, hidden layer with n neurons
-        self.sigmoid1 = nn.Sigmoid()
+        self.fc1 = nn.Linear(2, 128)  # Input layer with 2 neurons, hidden layer with n neurons
+        self.relu1 = nn.ReLU()
         self.fc2 = nn.Linear(128, 64)
-        self.sigmoid2 = nn.Sigmoid()
-        self.fc3 = nn.Linear(64, 1)  # Output layer with 1 neuron
+        self.relu2 = nn.ReLU()
+        self.fc3 = nn.Linear(64, 1) 
         
-
+        
+        
+        
     def forward(self, x):
         x = self.fc1(x)
-        x = self.sigmoid1(x)
+        x = self.relu1(x)
         x = self.fc2(x)
-        x = self.sigmoid2(x)
+        x = self.relu2(x)
         x = self.fc3(x)
+        
+        
+        
         return x
+
 
 
 model = NeuralNetwork()
 
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=0.001) #, weight_decay=0.001)
 
 
 # Training loop
@@ -122,7 +129,7 @@ with torch.no_grad():
 
 
 # Example: make predictions on new data
-new_data = np.array([[(4-mean0)/std0, (7-mean1)/std1, (10-mean3)/std3], [(0.5-mean0)/std0, (50-mean1)/std1, (40-mean3)/std3]]) 
+new_data = np.array([[(4-mean0)/std0, (7-mean1)/std1], [(0.5-mean0)/std0, (50-mean1)/std1]]) 
 #new_data = scaler.transform(new_data)  # Normalize the new data
 new_data = torch.tensor(new_data, dtype=torch.float32)
 with torch.no_grad():
@@ -132,14 +139,14 @@ with torch.no_grad():
         print(f"Data {i + 1}: {pred.item()}")
 
 
-# Visualization
+# Visualization (you can modify the range based on your needs)
 
-velocity_range = np.linspace((X[:, 0]*std0+mean0).min(), (X[:, 0]*std0+mean0).max(), 100)
-throttling_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 100)
-steering_range = np.linspace((X[:, 2]*std3+mean3).min(),(X[:, 2]*std3+mean3).max(), 100)
-V, A, S = np.meshgrid(velocity_range, throttling_range, steering_range)
+velocity_range = np.linspace(0, (X[:, 0]*std0+mean0).max(), 20)
+# throttling_range = np.linspace(0, 50, 20)
+throttling_range = np.linspace(0, (X[:, 1]*std1+mean1).max(), 20)
+V, A = np.meshgrid(velocity_range, throttling_range)
 
-input_grid = np.column_stack(((V.flatten()-mean0)/std0, (A.flatten()-mean1)/std1, (S.flatten()-mean3/std3)))
+input_grid = np.column_stack(((V.flatten()-mean0)/std0, (A.flatten()-mean1)/std1))
 input_grid = torch.tensor(input_grid, dtype=torch.float32)
 
 with torch.no_grad():
@@ -150,8 +157,8 @@ commands_new = commands*std2+mean2
 
 
 
-# Save the trained model
-torch.save(model.state_dict(), 'trained_throttle_steering.pth')
+
+#torch.save(model.state_dict(), 'trained_throttle.pth')
 
 
 # evaluation
@@ -161,30 +168,52 @@ print(f"Mean Squared Error on Test Data: {mse}")
 mae = mean_absolute_error(y_test, test_outputs.view(-1).numpy())
 print(f"Mean Absolute Error on Test Data: {mae}")
 
-rmse = np.sqrt(mse)
+rmse = math.sqrt(mse)
 print(f"Root Mean Squared Error on Test Data: {rmse}")
 
 r2 = r2_score(y_test, test_outputs.view(-1).numpy())
 print(f"R-squared (R2) Score on Test Data: {r2}")
+
+
+# Save NN model in csv correct format for testing in the real vehicle
+
+velocity_headers = ['{:.2f}'.format(v) for v in velocity_range]
+
+# we normalize throttling values between 0 and 1
+throttling_range /= 100
+throttling_headers = ['Throttling {:.2f}'.format(a) for a in throttling_range]
+
+headers = [''] + velocity_headers
+
+commands_new_with_throttling = np.column_stack((throttling_range, commands_new))
+
+
+# WHEN YOU READ ANOTHER CSV FIRE FOR ANOTHER STEERING CONDITION, RENAME THE FOLLOWING CSV FILE AS WELL!!!
+
+csv_filename = 'steer_map_05_20.csv'
+np.savetxt(csv_filename, commands_new_with_throttling, delimiter=',', header=','.join(headers), comments='')
     
 
 xdata = dataa.Velocity*std0+mean0
 ydata = dataa.Throttling*std1+mean1
 zdata = dataa.Acceleration_with_pitch_comp*std2+mean2
-kdata = dataa.Pitch_angle*std3+mean3
 
 
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
-scatter = ax.scatter3D(xdata, ydata, zdata, c=kdata, marker='o')
-surf = ax.plot_surface(V, A, S, commands_new, cmap='viridis', alpha=0.7)
+
+scatter = ax.scatter3D(xdata, ydata, zdata, c=zdata, marker='o')
+surf = ax.plot_surface(V, A, commands_new, cmap='viridis')
 
 ax.set_xlabel('Velocity')
 ax.set_zlabel('Acceleration')
 ax.set_ylabel('Throttling Output')
-ax.set_title('Neural Network Output vs. Velocity, Throttling, Steering')
+
+# CHANGE THE TITLE OF THE PLOT DEPENDING ON THE CSV TABLE YOU ARE VISUALIZING
+
+ax.set_title('Neural Network Output vs. Velocity and Throttling | Steering: 0.05 - 0.20')
 
 fig.colorbar(surf)
 
