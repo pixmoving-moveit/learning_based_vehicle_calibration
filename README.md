@@ -178,13 +178,8 @@ When you launch these scripts, the training stage begins and when it is done, th
 
 This way, when you want to use the neural network model, you can avoid to train it everytime from scratch, but you can just train it once and then load it, according to the following scripts:
 
-```
-python3 load_throttle_model.py
 
-python3 load_brake_model.py
-```
-
-These scripts will create the acceleration and braking offline tables.
+These scripts will also create the acceleration and braking offline tables.
 
 
 ## Evaluation and Results

@@ -114,14 +114,14 @@ with torch.no_grad():
     #print(f"Mean Squared Error on Test Data: {test_loss.item()}")
 
 # Example: make predictions on new data
-new_data = np.array([[(4-mean0)/std0, (7-mean1)/std1], [(0.5-mean0)/std0, (50-mean1)/std1]])  
+#new_data = np.array([[(4-mean0)/std0, (7-mean1)/std1], [(0.5-mean0)/std0, (50-mean1)/std1]])  
 #new_data = scaler.transform(new_data)  # Normalize the new data
-new_data = torch.tensor(new_data, dtype=torch.float32)
-with torch.no_grad():
-    predictions = model(new_data)*std2+mean2
-    print("Predicted Commands for New Data:")
-    for i, pred in enumerate(predictions):
-        print(f"Data {i + 1}: {pred.item()}")
+#new_data = torch.tensor(new_data, dtype=torch.float32)
+#with torch.no_grad():
+    #predictions = model(new_data)*std2+mean2
+    #print("Predicted Commands for New Data:")
+    #for i, pred in enumerate(predictions):
+        #print(f"Data {i + 1}: {pred.item()}")
 
 # Visualization
 
@@ -129,7 +129,7 @@ with torch.no_grad():
 #braking_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 20)
 
 velocity_range = np.linspace(0, (X[:, 0]*std0+mean0).max(), 20)
-braking_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 20)
+braking_range = np.linspace((X[:, 1]*std1+mean1).min(), 80, 20)
 V, A = np.meshgrid(velocity_range, braking_range)
 
 input_grid = np.column_stack(((V.flatten()-mean0)/std0, (A.flatten()-mean1)/std1))
@@ -158,6 +158,28 @@ print(f"Root Mean Squared Error on Test Data: {rmse}")
 
 r2 = r2_score(y_test, test_outputs.view(-1).numpy())
 print(f"R-squared (R2) Score on Test Data: {r2}")
+
+
+
+
+# Save NN model in csv correct format for testing in the real vehicle
+
+velocity_headers = ['{:.2f}'.format(v) for v in velocity_range]
+
+# we normalize braking values from 0 to 1
+braking_range /= 100
+braking_headers = ['Throttling {:.2f}'.format(a) for a in braking_range]
+
+headers = [''] + velocity_headers
+
+# Add braking values to the commands_new matrix as the first column
+commands_new_with_throttling = np.column_stack((braking_range, commands_new))
+
+
+csv_filename = 'brake_map.csv'
+np.savetxt(csv_filename, commands_new_with_throttling, delimiter=',', header=','.join(headers), comments='')
+
+
 
 
 # visualize raw data with the NN model for comparison

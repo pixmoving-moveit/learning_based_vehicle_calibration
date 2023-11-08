@@ -15,6 +15,7 @@
     <buildtool_depend>ament_cmake_auto</buildtool_depend>
 
     <exec_depend>pix_hooke_driver_msgs</exec_depend>
+    <exec_depend>tier4_vehicle_msgs</exec_depend>
     <exec_depend>sensor_msgs</exec_depend>
     <exec_depend>rclpy</exec_depend>
     <exec_depend>can_msgs</exec_depend>

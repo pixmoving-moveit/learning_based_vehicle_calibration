@@ -62,7 +62,7 @@ class primotest(rclpy.node.Node):
 
             # here you can tune the parameters according to your needs
 
-            self.MAX_DATA = 3000
+            self.MAX_DATA = 1500
             self.NUM_OF_QUEUE = 20
             self.SPEED_THRESHOLD = 10.0/3.6
             self.STEERING_THRESHOLD = 2/25
