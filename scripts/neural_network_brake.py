@@ -1,3 +1,4 @@
+#! /usr/bin/python3
 import os
 import pandas as pd
 import numpy as np
@@ -16,7 +17,7 @@ dataa = pd.read_csv('braking.csv')
 
 # Standardize data and remove outliers, tune the thresholds according to your needs
 
-threshold0 = 1.5
+threshold0 = 10
 threshold1 = 10   
 threshold2 = 10  
 
