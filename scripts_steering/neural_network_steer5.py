@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#! /usr/bin/env python3
 import os
 import pandas as pd
 import numpy as np
@@ -11,19 +11,20 @@ from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import r2_score
 import math
+from scipy.signal import medfilt
 import rclpy
 from rclpy.node import Node
 
 
-class NeuralNetworkBrake(Node):
+class NeuralNetworkSteering5(Node):
     class NeuralNetwork(nn.Module):
         def __init__(self):
-            super(NeuralNetworkBrake.NeuralNetwork, self).__init__()
-            self.fc1 = nn.Linear(2, 128)  # Input layer with 2 neurons, hidden layer with n neurons
+            super(NeuralNetworkSteering5.NeuralNetwork, self).__init__()
+            self.fc1 = nn.Linear(2, 128)  
             self.relu1 = nn.ReLU()
-            self.fc2 = nn.Linear(128, 32)
+            self.fc2 = nn.Linear(128, 64)
             self.relu2 = nn.ReLU()
-            self.fc3 = nn.Linear(32, 1)    # Output layer with 1 neuron
+            self.fc3 = nn.Linear(64, 1) 
             
         def forward(self, x):
             x = self.fc1(x)
@@ -33,55 +34,60 @@ class NeuralNetworkBrake(Node):
             x = self.fc3(x)
             
             return x
-
+        
 
     def __init__(self):
-        
-        super().__init__('neural_network_brake')
+        super().__init__('neural_network_steering5')
 
         self.model = self.NeuralNetwork()
 
-        data = pd.read_csv('braking.csv')
-        dataa = pd.read_csv('braking.csv')
+        
+        data = pd.read_csv('steering_05.csv')
+        dataa = pd.read_csv('steering_05.csv')
+
+
+        columns = ["Velocity", "Throttling", "Acceleration_measured"]
+
+        # Apply a median filter with a window size of 11 to each column
+        self.filter_size = self.declare_parameter('mean_filter_size').get_parameter_value().integer_value
+        for col in columns:
+            data[col] = medfilt(data[col], kernel_size=self.filter_size)
+            dataa[col] = medfilt(dataa[col], kernel_size=self.filter_size)
+
 
         # Load params from launch file
-        self.FILTER_VEL_BRAKE = self.declare_parameter('filter_vel_brake').get_parameter_value().double_value
-        self.FILTER_CMD_BRAKE = self.declare_parameter('filter_cmd_brake').get_parameter_value().integer_value
-        self.FILTER_ACC_BRAKE = self.declare_parameter('filter_acc_brake').get_parameter_value().integer_value 
+        self.FILTER_VEL = self.declare_parameter('filter_vel').get_parameter_value().integer_value
+        self.FILTER_CMD = self.declare_parameter('filter_cmd').get_parameter_value().integer_value
+        self.FILTER_ACC = self.declare_parameter('filter_acc').get_parameter_value().integer_value
 
         mean0 = data["Velocity"].mean()
         std0 = data["Velocity"].std()
         data["Velocity"] = (data["Velocity"] - mean0) / std0
         dataa["Velocity"] = (dataa["Velocity"] - mean0) / std0
 
-        data = data[abs(data["Velocity"]-mean0) <= std0*self.FILTER_VEL_BRAKE]
-        dataa = dataa[abs(dataa["Velocity"]-mean0) <= std0*self.FILTER_VEL_BRAKE]
+        data = data[abs(data["Velocity"]-mean0) <= std0*self.FILTER_VEL]
+        dataa = dataa[abs(dataa["Velocity"]-mean0) <= std0*self.FILTER_VEL]
 
+        mean1 = data["Throttling"].mean()
+        std1 = data["Throttling"].std()
+        data["Throttling"] = (data["Throttling"] - mean1) / std1
+        dataa["Throttling"] = (dataa["Throttling"] - mean1) / std1
 
-        mean1 = data["Braking"].mean()
-        std1 = data["Braking"].std()
-        data["Braking"] = (data["Braking"] - mean1) / std1
-        dataa["Braking"] = (dataa["Braking"] - mean1) / std1
-
-        data = data[abs(data["Braking"]-mean1) <= std1*self.FILTER_CMD_BRAKE]
-        dataa = dataa[abs(dataa["Braking"]-mean1) <= std1*self.FILTER_CMD_BRAKE]
-
+        data = data[abs(data["Throttling"]-mean1) <= std1*self.FILTER_CMD]
+        dataa = dataa[abs(dataa["Throttling"]-mean1) <= std1*self.FILTER_CMD]
 
         mean2 = data["Acceleration_measured"].mean()
         std2 = data["Acceleration_measured"].std()
         data["Acceleration_measured"] = (data["Acceleration_measured"] - mean2) / std2
         dataa["Acceleration_measured"] = (dataa["Acceleration_measured"] - mean2) / std2
 
-        data = data[abs(data["Acceleration_measured"]-mean2) <= std2*self.FILTER_ACC_BRAKE]
-        dataa = dataa[abs(dataa["Acceleration_measured"]-mean2) <= std2*self.FILTER_ACC_BRAKE]
+        data = data[abs(data["Acceleration_measured"]-mean2) <= std2*self.FILTER_ACC]
+        dataa = dataa[abs(dataa["Acceleration_measured"]-mean2) <= std2*self.FILTER_ACC]
 
 
+        # Split the data into input features (velocity and throttle) and target (acceleration) and test/train
 
-
-
-        # Split the data into input features (velocity and braking) and target (acceleration)
-
-        X = data[['Velocity', 'Braking']].values
+        X = data[['Velocity', 'Throttling']].values
         y = data['Acceleration_measured'].values
 
 
@@ -97,10 +103,9 @@ class NeuralNetworkBrake(Node):
 
 
 
-
-
         criterion = nn.MSELoss()
-        optimizer = optim.Adam(self.model.parameters(), lr=0.001)
+        optimizer = optim.Adam(self.model.parameters(), lr=0.001) #, weight_decay=0.001)
+
 
         # Training loop
         num_epochs = 100
@@ -115,30 +120,30 @@ class NeuralNetworkBrake(Node):
             loss.backward()  
             optimizer.step() 
 
-        # Evaluate the model on the test data
+
         with torch.no_grad():
             test_outputs = self.model(X_test)
             test_loss = criterion(test_outputs, y_test.view(-1, 1))
             #print(f"Mean Squared Error on Test Data: {test_loss.item()}")
 
+
         # Example: make predictions on new data
-        #new_data = np.array([[(4-mean0)/std0, (7-mean1)/std1], [(0.5-mean0)/std0, (50-mean1)/std1]])  
-        #new_data = scaler.transform(new_data)  # Normalize the new data
-        #new_data = torch.tensor(new_data, dtype=torch.float32)
-        #with torch.no_grad():
-            #predictions = model(new_data)*std2+mean2
-            #print("Predicted Commands for New Data:")
-            #for i, pred in enumerate(predictions):
-                #print(f"Data {i + 1}: {pred.item()}")
+        # new_data = np.array([[(4-mean0)/std0, (7-mean1)/std1], [(0.5-mean0)/std0, (50-mean1)/std1]]) 
+        # #new_data = scaler.transform(new_data)  # Normalize the new data
+        # new_data = torch.tensor(new_data, dtype=torch.float32)
+        # with torch.no_grad():
+        #     predictions = self.model(new_data)*std2+mean2
+        #     print("Predicted Commands for New Data:")
+        #     for i, pred in enumerate(predictions):
+        #         print(f"Data {i + 1}: {pred.item()}")
 
-        # Visualization
 
-        #velocity_range = np.linspace((X[:, 0]*std0+mean0).min(), (X[:, 0]*std0+mean0).max(), 20)
-        #braking_range = np.linspace((X[:, 1]*std1+mean1).min(), (X[:, 1]*std1+mean1).max(), 20)
+        # Visualization (you can modify the range based on your needs)
 
         velocity_range = np.linspace(0, (X[:, 0]*std0+mean0).max(), 20)
-        braking_range = np.linspace((X[:, 1]*std1+mean1).min(), 80, 20)
-        V, A = np.meshgrid(velocity_range, braking_range)
+        # throttling_range = np.linspace(0, 50, 20)
+        throttling_range = np.linspace(0, (X[:, 1]*std1+mean1).max(), 20)
+        V, A = np.meshgrid(velocity_range, throttling_range)
 
         input_grid = np.column_stack(((V.flatten()-mean0)/std0, (A.flatten()-mean1)/std1))
         input_grid = torch.tensor(input_grid, dtype=torch.float32)
@@ -148,10 +153,11 @@ class NeuralNetworkBrake(Node):
             
             
         commands_new = commands*std2+mean2
-            
+
+
 
         # Save the trained model
-        #torch.save(self.model.state_dict(), 'trained_brake.pth')
+        #torch.save(model.state_dict(), 'trained_throttle.pth')
 
 
         # evaluation
@@ -161,39 +167,37 @@ class NeuralNetworkBrake(Node):
         mae = mean_absolute_error(y_test, test_outputs.view(-1).numpy())
         print(f"Mean Absolute Error on Test Data: {mae}")
 
-        rmse = np.sqrt(mse)
+        rmse = math.sqrt(mse)
         print(f"Root Mean Squared Error on Test Data: {rmse}")
 
         r2 = r2_score(y_test, test_outputs.view(-1).numpy())
         print(f"R-squared (R2) Score on Test Data: {r2}")
 
 
-
-
         # Save NN model in csv correct format for testing in the real vehicle
 
         velocity_headers = ['{:.2f}'.format(v) for v in velocity_range]
 
-        # we normalize braking values from 0 to 1
-        braking_range /= 100
-        braking_headers = ['Throttling {:.2f}'.format(a) for a in braking_range]
+        # we normalize throttling values between 0 and 1
+        throttling_range /= 100
+        throttling_headers = ['Throttling {:.2f}'.format(a) for a in throttling_range]
 
         headers = [''] + velocity_headers
 
-        # Add braking values to the commands_new matrix as the first column
-        commands_new_with_throttling = np.column_stack((braking_range, commands_new))
+        commands_new_with_throttling = np.column_stack((throttling_range, commands_new))
 
 
-        csv_filename = 'brake_map.csv'
+        # WHEN YOU READ ANOTHER CSV FIRE FOR ANOTHER STEERING CONDITION, RENAME THE FOLLOWING CSV FILE AS WELL!!!
+
+        csv_filename = 'steer_map_5.csv'
         np.savetxt(csv_filename, commands_new_with_throttling, delimiter=',', header=','.join(headers), comments='')
+            
 
-
-
-
-        # visualize raw data with the NN model for comparison
         xdata = dataa.Velocity*std0+mean0
-        ydata = dataa.Braking*std1+mean1
+        ydata = dataa.Throttling*std1+mean1
         zdata = dataa.Acceleration_measured*std2+mean2
+
+
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
@@ -201,30 +205,23 @@ class NeuralNetworkBrake(Node):
         scatter = ax.scatter3D(xdata, ydata, zdata, c=zdata, marker='o')
         surf = ax.plot_surface(V, A, commands_new, cmap='viridis')
 
-
         ax.set_xlabel('Velocity')
         ax.set_zlabel('Acceleration')
-        ax.set_ylabel('Braking Output')
-        ax.set_title('Neural Network Output vs. Velocity and Braking')
+        ax.set_ylabel('Throttling Output')
+
+        # CHANGE THE TITLE OF THE PLOT DEPENDING ON THE CSV TABLE YOU ARE VISUALIZING
+
+        ax.set_title('Neural Network Output vs. Velocity and Throttling | Steering 5')
 
         fig.colorbar(surf)
 
         plt.show()
 
-
 def main():
     rclpy.init()
-    neural_network_brake = NeuralNetworkBrake()
-    rclpy.spin(neural_network_brake)
+    neural_network_steering5 = NeuralNetworkSteering5()
+    rclpy.spin(neural_network_steering5)
 
-    
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-

@@ -20,34 +20,6 @@ class primotest(rclpy.node.Node):
       def __init__(self):
 
             super().__init__('primo_test')
-
-            self.i = 0
-            self.j = 0
-            self.h = 0
-            self.k = 0
-            self.a = 0
-            self.b = 0
-            self.c = 0
-            self.d = 0
-            self.ii = 0
-            self.jj = 0
-            self.hh = 0
-            self.kk = 0
-            self.aa = 0
-            self.bb = 0
-            self.cc = 0
-            self.dd = 0
-            self.vel = []
-            self.cmd = []
-            self.acc = []
-            self.acc2 = []
-            self.velb = []
-            self.cmdb = []
-            self.accb = []
-            self.accb2 = []
-            self.pitch = []
-            self.pitch2 = []
-            self.flag = 0
             
             
             # data sharing member variables
@@ -60,40 +32,91 @@ class primotest(rclpy.node.Node):
             self.velocity = 0.0
             self.pitch_angle = 0.0
 
-
-            # here you can tune the parameters according to your needs
-
-            self.MAX_DATA = 1500
-            self.NUM_OF_QUEUE = 20
-            self.SPEED_THRESHOLD = 10.0/3.6
-            self.STEERING_THRESHOLD = 0.03490658503988659
-            self.THROTTLE_DEADZONE = 5
-            self.BRAKE_DEADZONE = 5
-            self.MAX_VELOCITY = 40.0/3.6
-            self.THROTTLE_THRESHOLD1 = 30
-            self.THROTTLE_THRESHOLD2 = 55
-            self.BRAKE_THRESHOLD1 = 15
-            self.BRAKE_THRESHOLD2 = 25
-            self.CONSISTENCY_TRESHOLD = 20            
-            
             self.g = 9.80665
 
-            self.progress_bar0 = tqdm(total = self.MAX_DATA, desc = "Low speed: 0 - Throttle deadzone  ", dynamic_ncols=True)
-            self.progress_bar1 = tqdm(total = self.MAX_DATA, desc = "Low speed: Throttle deadzone - " + str(self.THROTTLE_THRESHOLD1) + " ", dynamic_ncols=True)
-            self.progress_bar2 = tqdm(total = self.MAX_DATA, desc = "Low speed: Throttle " + str(self.THROTTLE_THRESHOLD1) + " - " + str(self.THROTTLE_THRESHOLD2) + "       ", dynamic_ncols=True)
-            self.progress_bar3 = tqdm(total = self.MAX_DATA, desc = "Low speed: Throttle > " + str(self.THROTTLE_THRESHOLD2) + "          ", dynamic_ncols=True)
-            self.progress_bar4 = tqdm(total = self.MAX_DATA, desc = "High speed: 0 - Throttle deadzone ", dynamic_ncols=True)
-            self.progress_bar5 = tqdm(total = self.MAX_DATA, desc = "High speed: Throttle deadzone - " + str(self.THROTTLE_THRESHOLD2), dynamic_ncols=True)
-            self.progress_bar6 = tqdm(total = self.MAX_DATA, desc = "High speed: Throttle " + str(self.THROTTLE_THRESHOLD1) + " - " + str(self.THROTTLE_THRESHOLD2) + "      ", dynamic_ncols=True)
-            self.progress_bar7 = tqdm(total = self.MAX_DATA, desc = "High speed: Throttle > " + str(self.THROTTLE_THRESHOLD2) + "         ", dynamic_ncols=True)
-            self.progress_bar8 = tqdm(total = self.MAX_DATA, desc = "Low speed: 0 - Brake deadzone     ", dynamic_ncols=True)
-            self.progress_bar9 = tqdm(total = self.MAX_DATA, desc = "Low speed: Brake deadzone - " + str(self.BRAKE_THRESHOLD1) + "    ", dynamic_ncols=True)
-            self.progress_bar10 = tqdm(total = self.MAX_DATA, desc = "Low speed: Brake " + str(self.BRAKE_THRESHOLD1) + " - " + str(self.BRAKE_THRESHOLD2) + "          ", dynamic_ncols=True) 
-            self.progress_bar11 = tqdm(total = self.MAX_DATA, desc = "Low speed: Brake > " + str(self.BRAKE_THRESHOLD2) + "             ", dynamic_ncols=True)
-            self.progress_bar12 = tqdm(total = self.MAX_DATA, desc = "High speed: 0 - Brake deadzone    ", dynamic_ncols=True)
-            self.progress_bar13 = tqdm(total = self.MAX_DATA, desc = "High speed: Brake deadzone - " + str(self.BRAKE_THRESHOLD1) + "   ", dynamic_ncols=True)
-            self.progress_bar14 = tqdm(total = self.MAX_DATA, desc = "High speed: Brake " + str(self.BRAKE_THRESHOLD1) + " - " + str(self.BRAKE_THRESHOLD2) + "         ", dynamic_ncols=True)
-            self.progress_bar15 = tqdm(total = self.MAX_DATA, desc = "High speed: Brake > " + str(self.BRAKE_THRESHOLD2) + "            ", dynamic_ncols=True)
+
+            # Load params from launch file
+
+            self.MAX_DATA = self.declare_parameter('max_data').get_parameter_value().integer_value
+            self.NUM_OF_QUEUE = self.declare_parameter('num_of_queue').get_parameter_value().integer_value
+            self.SPEED_THRESHOLD = self.declare_parameter('speed_threshold').get_parameter_value().double_value
+            self.STEERING_THRESHOLD = self.declare_parameter('steering_threshold').get_parameter_value().double_value
+            self.THROTTLE_DEADZONE = self.declare_parameter('throttle_deadzone').get_parameter_value().integer_value
+            self.BRAKE_DEADZONE = self.declare_parameter('brake_deadzone').get_parameter_value().integer_value
+            self.MAX_VELOCITY = self.declare_parameter('max_velocity').get_parameter_value().double_value
+            self.THROTTLE_THRESHOLD1 = self.declare_parameter('throttle_threshold1').get_parameter_value().integer_value
+            self.THROTTLE_THRESHOLD2 = self.declare_parameter('throttle_threshold2').get_parameter_value().integer_value
+            self.BRAKE_THRESHOLD1 = self.declare_parameter('brake_threshold1').get_parameter_value().integer_value
+            self.BRAKE_THRESHOLD2 = self.declare_parameter('brake_threshold2').get_parameter_value().integer_value
+            self.CONSISTENCY_THRESHOLD = self.declare_parameter('consistency_threshold').get_parameter_value().integer_value
+
+            self.RECOVERY_MODE = self.declare_parameter('Recovery_Mode').get_parameter_value().bool_value
+
+            if self.RECOVERY_MODE:
+                  df_existing1 = pd.read_csv('throttling.csv')
+                  df_existing2 = pd.read_csv('braking.csv')
+
+                  self.k = df_existing1['Low_V_0_deadzone'].iloc[0]
+                  self.i = df_existing1['Low_V_deadzone_thr1'].iloc[0]
+                  self.j = df_existing1['Low_V_thr1_thr2'].iloc[0]
+                  self.h = df_existing1['Low_V_thr2_max'].iloc[0]
+                  self.d = df_existing1['High_V_0_deadzone'].iloc[0]
+                  self.a = df_existing1['High_V_deadzone_thr1'].iloc[0]
+                  self.b = df_existing1['High_V_thr1_thr2'].iloc[0]
+                  self.c = df_existing1['High_V_thr2_max'].iloc[0]
+                  self.vel = df_existing1['Velocity'].tolist()
+                  self.cmd = df_existing1['Throttling'].tolist()
+                  self.acc = df_existing1['Acceleration_with_pitch_comp'].tolist()
+                  self.acc2 = df_existing1['Acceleration_measured'].tolist()
+                  self.pitch = df_existing1['Pitch_angle'].tolist()
+
+                  self.kk = df_existing2['Low_V_0_deadzone'].iloc[0]
+                  self.ii = df_existing2['Low_V_deadzone_thr1'].iloc[0]
+                  self.jj = df_existing2['Low_V_thr1_thr2'].iloc[0]
+                  self.hh = df_existing2['Low_V_thr2_max'].iloc[0]
+                  self.dd = df_existing2['High_V_0_deadzone'].iloc[0]
+                  self.aa = df_existing2['High_V_deadzone_thr1'].iloc[0]
+                  self.bb = df_existing2['High_V_thr1_thr2'].iloc[0]
+                  self.cc = df_existing2['High_V_thr2_max'].iloc[0]
+                  self.velb = df_existing2['Velocity'].tolist()
+                  self.cmdb = df_existing2['Throttling'].tolist()
+                  self.accb = df_existing2['Acceleration_with_pitch_comp'].tolist()
+                  self.accb2 = df_existing2['Acceleration_measured'].tolist()
+                  self.pitch2 = df_existing2['Pitch_angle'].tolist()
+
+            else:
+                  self.i = self.j = self.h = self.k = self.a = self.b = self.c = self.d = self.d = self.ii = self.jj = self.hh = self.kk = self.aa = self.bb = self.cc = self.dd = 0
+                  self.vel = []
+                  self.cmd = []
+                  self.acc = []
+                  self.acc2 = []
+                  self.velb = []
+                  self.cmdb = []
+                  self.accb = []
+                  self.accb2 = []
+                  self.pitch = []
+                  self.pitch2 = []
+                  self.flag = 0
+
+                  
+
+
+            self.progress_bar0 = tqdm(total = self.MAX_DATA-self.k, desc = "Low speed: 0 - Throttle deadzone  ", dynamic_ncols=True)
+            self.progress_bar1 = tqdm(total = self.MAX_DATA-self.i, desc = "Low speed: Throttle deadzone - " + str(self.THROTTLE_THRESHOLD1) + " ", dynamic_ncols=True)
+            self.progress_bar2 = tqdm(total = self.MAX_DATA-self.j, desc = "Low speed: Throttle " + str(self.THROTTLE_THRESHOLD1) + " - " + str(self.THROTTLE_THRESHOLD2) + "       ", dynamic_ncols=True)
+            self.progress_bar3 = tqdm(total = self.MAX_DATA-self.h, desc = "Low speed: Throttle > " + str(self.THROTTLE_THRESHOLD2) + "          ", dynamic_ncols=True)
+            self.progress_bar4 = tqdm(total = self.MAX_DATA-self.d, desc = "High speed: 0 - Throttle deadzone ", dynamic_ncols=True)
+            self.progress_bar5 = tqdm(total = self.MAX_DATA-self.a, desc = "High speed: Throttle deadzone - " + str(self.THROTTLE_THRESHOLD2), dynamic_ncols=True)
+            self.progress_bar6 = tqdm(total = self.MAX_DATA-self.b, desc = "High speed: Throttle " + str(self.THROTTLE_THRESHOLD1) + " - " + str(self.THROTTLE_THRESHOLD2) + "      ", dynamic_ncols=True)
+            self.progress_bar7 = tqdm(total = self.MAX_DATA-self.c, desc = "High speed: Throttle > " + str(self.THROTTLE_THRESHOLD2) + "         ", dynamic_ncols=True)
+            self.progress_bar8 = tqdm(total = self.MAX_DATA-self.kk, desc = "Low speed: 0 - Brake deadzone     ", dynamic_ncols=True)
+            self.progress_bar9 = tqdm(total = self.MAX_DATA-self.ii, desc = "Low speed: Brake deadzone - " + str(self.BRAKE_THRESHOLD1) + "    ", dynamic_ncols=True)
+            self.progress_bar10 = tqdm(total = self.MAX_DATA-self.jj, desc = "Low speed: Brake " + str(self.BRAKE_THRESHOLD1) + " - " + str(self.BRAKE_THRESHOLD2) + "          ", dynamic_ncols=True) 
+            self.progress_bar11 = tqdm(total = self.MAX_DATA-self.hh, desc = "Low speed: Brake > " + str(self.BRAKE_THRESHOLD2) + "             ", dynamic_ncols=True)
+            self.progress_bar12 = tqdm(total = self.MAX_DATA-self.dd, desc = "High speed: 0 - Brake deadzone    ", dynamic_ncols=True)
+            self.progress_bar13 = tqdm(total = self.MAX_DATA-self.aa, desc = "High speed: Brake deadzone - " + str(self.BRAKE_THRESHOLD1) + "   ", dynamic_ncols=True)
+            self.progress_bar14 = tqdm(total = self.MAX_DATA-self.bb, desc = "High speed: Brake " + str(self.BRAKE_THRESHOLD1) + " - " + str(self.BRAKE_THRESHOLD2) + "         ", dynamic_ncols=True)
+            self.progress_bar15 = tqdm(total = self.MAX_DATA-self.cc, desc = "High speed: Brake > " + str(self.BRAKE_THRESHOLD2) + "            ", dynamic_ncols=True)
 
             
             self.create_subscription(Float32, '/sensing/combination_navigation/chc/pitch', self.pitch_topic_callback, 1)
@@ -103,8 +126,6 @@ class primotest(rclpy.node.Node):
             self.create_subscription(Imu, '/vehicle/status/imu', self.imu_topic_callback, 1)
             self.timer = self.create_timer(0.02, self.test_callback)
 
-
-            # make sure to record these data: ros2 bag record /sensing/gnss/chc/pitch /actuation_input /velocity_input /sensing/gnss/chc/imu
             
             
             self.queue_velocity = deque()
@@ -185,7 +206,7 @@ class primotest(rclpy.node.Node):
                               
                               
             # save data in csv file                 
-            dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch_angle': self.pitch, 'k': self.k, 'i': self.i, 'j': self.j, 'h': self.h, 'd': self.d, 'a': self.a, 'b': self.b, 'c': self.c}
+            dict1 = {'Velocity': self.vel, 'Throttling': self.cmd, 'Acceleration_with_pitch_comp': self.acc, 'Acceleration_measured': self.acc2, 'Pitch_angle': self.pitch, 'Low_V_0_deadzone': self.k, 'Low_V_deadzone_thr1': self.i, 'Low_V_thr1_thr2': self.j, 'Low_V_thr2_max': self.h, 'High_V_0_deadzone': self.d, 'High_V_deadzone_thr1': self.a, 'High_V_thr1_thr2': self.b, 'High_V_thr2_max': self.c}
             df1 = pd.DataFrame(dict1)
             df1.to_csv('throttling.csv') 
 
@@ -209,7 +230,7 @@ class primotest(rclpy.node.Node):
                               
                               
                               
-            dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch_angle': self.pitch2, 'kk': self.kk, 'ii': self.ii, 'jj': self.jj, 'hh': self.hh, 'dd': self.dd, 'aa': self.aa, 'bb': self.bb, 'cc': self.cc}
+            dict2 = {'Velocity': self.velb, 'Braking': self.cmdb, 'Acceleration_with_pitch_comp': self.accb, 'Acceleration_measured': self.accb2, 'Pitch_angle': self.pitch2, 'Low_V_0_deadzone': self.kk, 'Low_V_deadzone_thr1': self.ii, 'Low_V_thr1_thr2': self.jj, 'Low_V_thr2_max': self.hh, 'High_V_0_deadzone': self.dd, 'High_V_deadzone_thr1': self.aa, 'High_V_thr1_thr2': self.bb, 'High_V_thr2_max': self.cc}
             df2 = pd.DataFrame(dict2)
             df2.to_csv('braking.csv') 
 
@@ -231,7 +252,7 @@ class primotest(rclpy.node.Node):
             # THROTTLING SCENARIO to train throttling model
             if(len(self.queue_throttle)>=self.NUM_OF_QUEUE and(len(self.queue_braking)>=self.NUM_OF_QUEUE)):
 
-                  if(self.braking == 0 and abs(self.steering) < self.STEERING_THRESHOLD and abs(self.throttling_prec-mean(self.queue_throttle)) <= self.CONSISTENCY_TRESHOLD):
+                  if(self.braking == 0 and abs(self.steering) < self.STEERING_THRESHOLD and abs(self.throttling_prec-mean(self.queue_throttle)) <= self.CONSISTENCY_THRESHOLD):
                         
                         #low velocity scenario
 
@@ -326,7 +347,7 @@ class primotest(rclpy.node.Node):
 
                   # BRAKING SCENARIO to train braking model
 
-                  if(self.throttling == 0 and abs(self.steering) < self.STEERING_THRESHOLD and abs(self.braking_prec-mean(self.queue_braking)) <= self.CONSISTENCY_TRESHOLD):
+                  if(self.throttling == 0 and abs(self.steering) < self.STEERING_THRESHOLD and abs(self.braking_prec-mean(self.queue_braking)) <= self.CONSISTENCY_THRESHOLD):
                         
                         #low velocity scenario
 

@@ -7,8 +7,9 @@ import math
 from collections import deque
 from statistics import mean
 
-from tier4_vehicle_msgs.msg import ActuationCommand
+from tier4_vehicle_msgs.msg import ActuationStatusStamped
 from autoware_auto_vehicle_msgs.msg import VelocityReport
+from autoware_auto_vehicle_msgs.msg import SteeringReport
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float32
 
@@ -19,47 +20,6 @@ class primotest(rclpy.node.Node):
       def __init__(self):
 
             super().__init__('primo_test')
-
-            self.i = 0
-            self.j = 0
-            self.h = 0
-            self.k = 0
-            self.a = 0
-            self.ii = 0
-            self.jj = 0
-            self.hh = 0
-            self.kk = 0
-            self.aa = 0
-            self.vel1 = []
-            self.cmd1 = []
-            self.acc1 = []
-            self.accp1 = []
-            self.pitch1 = []
-            self.steer1 = []
-            self.vel2 = []
-            self.cmd2 = []
-            self.acc2 = []
-            self.accp2 = []
-            self.pitch2 = []
-            self.steer2 = []
-            self.vel3 = []
-            self.cmd3 = []
-            self.acc3 = []
-            self.accp3 = []
-            self.pitch3 = []
-            self.steer3 = []
-            self.vel4 = []
-            self.cmd4 = []
-            self.acc4 = []
-            self.accp4 = []
-            self.pitch4 = []
-            self.steer4 = []
-            self.vel5 = []
-            self.cmd5 = []
-            self.acc5 = []
-            self.accp5 = []
-            self.pitch5 = []
-            self.steer5 = []
             
             
             # data sharing member variables
@@ -71,43 +31,129 @@ class primotest(rclpy.node.Node):
             self.velocity = 0.0
             self.pitch_angle = 0.0
 
-
-            # here you can tune these parameters according to your needs
-
-            self.MAX_DATA = 10000
-            self.MAX_VELOCITY = 7.0/3.6
-            self.THROTTLE_THRESHOLD = 12
-            self.CONSISTENCY_TRESHOLD = 20   
-            self.STEERING_THR1 = 0.05
-            self.STEERING_THR2 = 0.20
-            self.STEERING_THR3 = 0.40
-            self.STEERING_THR4 = 0.60
-            self.STEERING_THR5 = 0.80 
-
-            
-
             self.g = 9.80665
 
-            self.progress_bar0 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering: " + str(self.STEERING_THR1) + " - " + str(self.STEERING_THR2))
-            self.progress_bar1 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering:  " + str(self.STEERING_THR2) + " - " + str(self.STEERING_THR3))
-            self.progress_bar2 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering:  " + str(self.STEERING_THR3) + " - " + str(self.STEERING_THR4))
-            self.progress_bar3 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering:  " + str(self.STEERING_THR4) + " - " + str(self.STEERING_THR5))
-            self.progress_bar4 = tqdm(total = self.MAX_DATA, desc = " Low throttle | Steering:  " + str(self.STEERING_THR5) + " - 1.0")
-            self.progress_bar10 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering: " + str(self.STEERING_THR1) + " - " + str(self.STEERING_THR2))
-            self.progress_bar11 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering:  " + str(self.STEERING_THR2) + " - " + str(self.STEERING_THR3))
-            self.progress_bar12 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering:  " + str(self.STEERING_THR3) + " - " + str(self.STEERING_THR4))
-            self.progress_bar13 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering:  " + str(self.STEERING_THR4) + " - " + str(self.STEERING_THR5))
-            self.progress_bar14 = tqdm(total = self.MAX_DATA, desc = "High throttle | Steering:  " + str(self.STEERING_THR5) + " - 1.0")
+
+
+            # Load params from launch file
+
+            self.MAX_DATA = self.declare_parameter('max_data').get_parameter_value().integer_value
+            self.MAX_VELOCITY = self.declare_parameter('max_velocity').get_parameter_value().double_value
+            self.THROTTLE_THRESHOLD = self.declare_parameter('throttle_threshold').get_parameter_value().integer_value
+            self.STEERING_THR1 = self.declare_parameter('steering_threshold_1').get_parameter_value().double_value
+            self.STEERING_THR2 = self.declare_parameter('steering_threshold_2').get_parameter_value().double_value
+            self.STEERING_THR3 = self.declare_parameter('steering_threshold_3').get_parameter_value().double_value
+            self.STEERING_THR4 = self.declare_parameter('steering_threshold_4').get_parameter_value().double_value
+            self.STEERING_THR5 = self.declare_parameter('steering_threshold_5').get_parameter_value().double_value
+
+            self.RECOVERY_MODE = self.declare_parameter('Recovery_Mode').get_parameter_value().bool_value
+
+
+            if self.RECOVERY_MODE:
+                  df_existing1 = pd.read_csv('steering_01.csv')
+                  df_existing2 = pd.read_csv('steering_02.csv')
+                  df_existing3 = pd.read_csv('steering_03.csv')
+                  df_existing4 = pd.read_csv('steering_04.csv')
+                  df_existing5 = pd.read_csv('steering_05.csv')
+
+                  self.k = df_existing1['Index_low_cmd'].iloc[0]
+                  self.kk = df_existing1['Index_high_cmd'].iloc[0]
+                  self.vel1 = df_existing1['Velocity'].tolist()
+                  self.cmd1 = df_existing1['Throttling'].tolist()
+                  self.acc1 = df_existing1['Acceleration_with_pitch_comp'].tolist()
+                  self.accp1 = df_existing1['Acceleration_measured'].tolist()
+                  self.pitch1 = df_existing1['Pitch_angle'].tolist()
+                  self.steer1 = df_existing1['Steering'].tolist()
+
+                  self.i = df_existing2['Index_low_cmd'].iloc[0]
+                  self.ii = df_existing2['Index_high_cmd'].iloc[0]
+                  self.vel2 = df_existing2['Velocity'].tolist()
+                  self.cmd2 = df_existing2['Throttling'].tolist()
+                  self.acc2 = df_existing2['Acceleration_with_pitch_comp'].tolist()
+                  self.accp2 = df_existing2['Acceleration_measured'].tolist()
+                  self.pitch2 = df_existing2['Pitch_angle'].tolist()
+                  self.steer2 = df_existing2['Steering'].tolist()
+
+                  self.j = df_existing3['Index_low_cmd'].iloc[0]
+                  self.jj = df_existing3['Index_high_cmd'].iloc[0]
+                  self.vel3 = df_existing3['Velocity'].tolist()
+                  self.cmd3 = df_existing3['Throttling'].tolist()
+                  self.acc3 = df_existing3['Acceleration_with_pitch_comp'].tolist()
+                  self.accp3 = df_existing3['Acceleration_measured'].tolist()
+                  self.pitch3 = df_existing3['Pitch_angle'].tolist()
+                  self.steer3 = df_existing3['Steering'].tolist()
+
+                  self.h = df_existing4['Index_low_cmd'].iloc[0]
+                  self.hh = df_existing4['Index_high_cmd'].iloc[0]
+                  self.vel4 = df_existing4['Velocity'].tolist()
+                  self.cmd4 = df_existing4['Throttling'].tolist()
+                  self.acc4 = df_existing4['Acceleration_with_pitch_comp'].tolist()
+                  self.accp4 = df_existing4['Acceleration_measured'].tolist()
+                  self.pitch4 = df_existing4['Pitch_angle'].tolist()
+                  self.steer4 = df_existing4['Steering'].tolist()
+
+                  self.a = df_existing5['Index_low_cmd'].iloc[0]
+                  self.aa = df_existing5['Index_high_cmd'].iloc[0]
+                  self.vel5 = df_existing5['Velocity'].tolist()
+                  self.cmd5 = df_existing5['Throttling'].tolist()
+                  self.acc5 = df_existing5['Acceleration_with_pitch_comp'].tolist()
+                  self.accp5 = df_existing5['Acceleration_measured'].tolist()
+                  self.pitch5 = df_existing5['Pitch_angle'].tolist()
+                  self.steer5 = df_existing5['Steering'].tolist()
+
+            else:
+                  self.i = self.j = self.h = self.k = self.a = self.ii = self.jj = self.hh = self.kk = self.aa = 0
+                  self.vel1 = []
+                  self.cmd1 = []
+                  self.acc1 = []
+                  self.accp1 = []
+                  self.pitch1 = []
+                  self.steer1 = []
+                  self.vel2 = []
+                  self.cmd2 = []
+                  self.acc2 = []
+                  self.accp2 = []
+                  self.pitch2 = []
+                  self.steer2 = []
+                  self.vel3 = []
+                  self.cmd3 = []
+                  self.acc3 = []
+                  self.accp3 = []
+                  self.pitch3 = []
+                  self.steer3 = []
+                  self.vel4 = []
+                  self.cmd4 = []
+                  self.acc4 = []
+                  self.accp4 = []
+                  self.pitch4 = []
+                  self.steer4 = []
+                  self.vel5 = []
+                  self.cmd5 = []
+                  self.acc5 = []
+                  self.accp5 = []
+                  self.pitch5 = []
+                  self.steer5 = []
+
+
+            self.progress_bar0 = tqdm(total = self.MAX_DATA-self.k, desc = " Low throttle | Steering: " + str(self.STEERING_THR1) + " - " + str(self.STEERING_THR2), dynamic_ncols = True)
+            self.progress_bar1 = tqdm(total = self.MAX_DATA-self.i, desc = " Low throttle | Steering:  " + str(self.STEERING_THR2) + " - " + str(self.STEERING_THR3), dynamic_ncols = True)
+            self.progress_bar2 = tqdm(total = self.MAX_DATA-self.j, desc = " Low throttle | Steering:  " + str(self.STEERING_THR3) + " - " + str(self.STEERING_THR4), dynamic_ncols = True)
+            self.progress_bar3 = tqdm(total = self.MAX_DATA-self.h, desc = " Low throttle | Steering:  " + str(self.STEERING_THR4) + " - " + str(self.STEERING_THR5), dynamic_ncols = True)
+            self.progress_bar4 = tqdm(total = self.MAX_DATA-self.a, desc = " Low throttle | Steering:  " + str(self.STEERING_THR5) + " - max", dynamic_ncols = True)
+            self.progress_bar10 = tqdm(total = self.MAX_DATA-self.kk, desc = "High throttle | Steering: " + str(self.STEERING_THR1) + " - " + str(self.STEERING_THR2), dynamic_ncols = True)
+            self.progress_bar11 = tqdm(total = self.MAX_DATA-self.ii, desc = "High throttle | Steering:  " + str(self.STEERING_THR2) + " - " + str(self.STEERING_THR3), dynamic_ncols = True)
+            self.progress_bar12 = tqdm(total = self.MAX_DATA-self.jj, desc = "High throttle | Steering:  " + str(self.STEERING_THR3) + " - " + str(self.STEERING_THR4), dynamic_ncols = True)
+            self.progress_bar13 = tqdm(total = self.MAX_DATA-self.hh, desc = "High throttle | Steering:  " + str(self.STEERING_THR4) + " - " + str(self.STEERING_THR5), dynamic_ncols = True)
+            self.progress_bar14 = tqdm(total = self.MAX_DATA-self.aa, desc = "High throttle | Steering:  " + str(self.STEERING_THR5) + " - max", dynamic_ncols = True)
 
             
-            self.create_subscription(Float32, '/sensing/gnss/chc/pitch', self.pitch_topic_callback, 1)
-            self.create_subscription(ActuationCommand, '/actuation_input', self.drive_topic_callback, 1)
-            self.create_subscription(ActuationCommand, '/actuation_input', self.steer_topic_callback, 1)
-            self.create_subscription(VelocityReport, '/velocity_input', self.velocity_topic_callback, 1)
-            self.create_subscription(Imu, '/sensing/gnss/chc/imu', self.imu_topic_callback, 1)
+            self.create_subscription(Float32, '/sensing/combination_navigation/chc/pitch', self.pitch_topic_callback, 1)
+            self.create_subscription(ActuationStatusStamped, '/vehicle/status/actuation_status', self.actuation_topic_callback, 1)
+            self.create_subscription(SteeringReport, '/vehicle/status/steering_status', self.steer_topic_callback, 1)
+            self.create_subscription(VelocityReport, '/vehicle/status/velocity_status', self.velocity_topic_callback, 1)
+            self.create_subscription(Imu, '/vehicle/status/imu', self.imu_topic_callback, 1)
             self.timer = self.create_timer(0.02, self.test_callback)
 
-            # make sure to record these data: ros2 bag record /sensing/gnss/chc/pitch /actuation_input /velocity_input /sensing/gnss/chc/imu
             
         
             
@@ -127,15 +173,15 @@ class primotest(rclpy.node.Node):
             
 
 
-      def drive_topic_callback(self, msg):
+      def actuation_topic_callback(self, msg):
             
-            self.throttling = float(msg.accel_cmd)
+            self.throttling = float(msg.status.accel_status)*100.0
                   
                   
 
       def steer_topic_callback(self, msg):
             
-            self.steering = float(msg.steer_cmd)
+            self.steering = float(msg.steering_tire_angle)
                    
                     
 
@@ -163,11 +209,10 @@ class primotest(rclpy.node.Node):
                               
                               
             # save data in csv file                 
-            dict1 = {'Velocity': self.vel1, 'Throttling': self.cmd1, 'Steering': self.steer1, 'Acceleration_with_pitch_comp': self.acc1, 'Acceleration_measured': self.accp1, 'Pitch_angle': self.pitch1}
+            dict1 = {'Velocity': self.vel1, 'Throttling': self.cmd1, 'Steering': self.steer1, 'Acceleration_with_pitch_comp': self.acc1, 'Acceleration_measured': self.accp1, 'Pitch_angle': self.pitch1, 'Index_low_cmd': self.k, "Index_high_cmd": self.kk}
             df1 = pd.DataFrame(dict1)
             df1.to_csv('steering_01.csv') 
 
-            #self.throttling_prec = self.throttling
 
 
 
@@ -187,11 +232,10 @@ class primotest(rclpy.node.Node):
                               
                               
             # save data in csv file                 
-            dict2 = {'Velocity': self.vel2, 'Throttling': self.cmd2, 'Steering': self.steer2, 'Acceleration_with_pitch_comp': self.acc2, 'Acceleration_measured': self.accp2, 'Pitch_angle': self.pitch2}
+            dict2 = {'Velocity': self.vel2, 'Throttling': self.cmd2, 'Steering': self.steer2, 'Acceleration_with_pitch_comp': self.acc2, 'Acceleration_measured': self.accp2, 'Pitch_angle': self.pitch2, 'Index_low_cmd': self.i, 'Index_high_cmd': self.ii}
             df2 = pd.DataFrame(dict2)
             df2.to_csv('steering_02.csv') 
 
-            #self.throttling_prec = self.throttling     
 
 
 
@@ -211,11 +255,10 @@ class primotest(rclpy.node.Node):
                               
                               
             # save data in csv file                 
-            dict3 = {'Velocity': self.vel3, 'Throttling': self.cmd3, 'Steering': self.steer3, 'Acceleration_with_pitch_comp': self.acc3, 'Acceleration_measured': self.accp3, 'Pitch_angle': self.pitch3}
+            dict3 = {'Velocity': self.vel3, 'Throttling': self.cmd3, 'Steering': self.steer3, 'Acceleration_with_pitch_comp': self.acc3, 'Acceleration_measured': self.accp3, 'Pitch_angle': self.pitch3, 'Index_low_cmd': self.j, 'Index_high_cmd': self.jj}
             df3 = pd.DataFrame(dict3)
             df3.to_csv('steering_03.csv') 
 
-            #self.throttling_prec = mean(self.queue_throttle)      
 
 
 
@@ -235,11 +278,10 @@ class primotest(rclpy.node.Node):
                               
                               
             # save data in csv file                 
-            dict4 = {'Velocity': self.vel4, 'Throttling': self.cmd4, 'Steering': self.steer4, 'Acceleration_with_pitch_comp': self.acc4, 'Acceleration_measured': self.accp4, 'Pitch_angle': self.pitch4}
+            dict4 = {'Velocity': self.vel4, 'Throttling': self.cmd4, 'Steering': self.steer4, 'Acceleration_with_pitch_comp': self.acc4, 'Acceleration_measured': self.accp4, 'Pitch_angle': self.pitch4, 'Index_low_cmd': self.h, 'Index_high_cmd': self.hh}
             df4 = pd.DataFrame(dict4)
             df4.to_csv('steering_04.csv') 
 
-            #self.throttling_prec = mean(self.queue_throttle)  
 
 
 
@@ -259,11 +301,10 @@ class primotest(rclpy.node.Node):
                               
                               
             # save data in csv file                 
-            dict5 = {'Velocity': self.vel5, 'Throttling': self.cmd5, 'Steering': self.steer5, 'Acceleration_with_pitch_comp': self.acc5, 'Acceleration_measured': self.accp5, 'Pitch_angle': self.pitch5}
+            dict5 = {'Velocity': self.vel5, 'Throttling': self.cmd5, 'Steering': self.steer5, 'Acceleration_with_pitch_comp': self.acc5, 'Acceleration_measured': self.accp5, 'Pitch_angle': self.pitch5, 'Index_low_cmd': self.a, 'Index_high_cmd': self.aa}
             df5 = pd.DataFrame(dict5)
             df5.to_csv('steering_05.csv') 
 
-            #self.throttling_prec = mean(self.queue_throttle) 
 
 
 
@@ -276,7 +317,7 @@ class primotest(rclpy.node.Node):
             
             
 
-            if(0 < abs(self.velocity) <= self.MAX_VELOCITY): # and abs(self.throttling_prec-mean(self.queue_throttle)) <= self.CONSISTENCY_TRESHOLD):
+            if(0 < abs(self.velocity) <= self.MAX_VELOCITY):
                   
                   #low throttling scenario
 

@@ -1,5 +1,56 @@
 # Learning Based Vehicle Calibration
 
+## Getting Started
+
+### 1. Installation
+
+Download the repository and move inside the folder:
+
+```
+git clone https://github.com/pixmoving-moveit/learning_based_vehicle_calibration.git && cd learning_based_vehicle_calibration
+```
+
+Install the required libraries:
+
+```
+pip install -r requirements.txt
+```
+
+Make sure to place this package correcly inside your workspace, build it and source it.
+
+## 2. Longitudinal Dynamics
+
+To start collecting data, launch in your workspace:
+
+```
+ros2 launch learning_based_vehicle_calibration calibration_launch.py
+```
+
+Inside this launch file there is a variable called 'Recovery_Mode', set to False by default. If while you were collecting data the software stopped for some reasons or something happened causing the interruption of your collection process, you can collect data recovering from previous breaking points by setting the variable to True. This way it will update the csv tables you have already started to collect without the need to start from scratch.
+
+Once you have collected the data, in order to train and build your black box models, launch:
+
+```
+ros2 launch learning_based_vehicle_calibration neural_network_launch.py
+```
+
+## 3. Lateral Dynamics
+
+To start collecting data, launch in your workspace:
+
+```
+ros2 launch learning_based_vehicle_calibration calibration_steering_launch.py
+```
+
+Also in this case, you can set the variable 'Recovery_Mode' to True if you need to recover from previous breaking points.
+
+To train and build your models, launch:
+
+```
+ros2 launch learning_based_vehicle_calibration neural_network_steering_launch.py
+```
+
+
 ## Overview
 
 Here we present the software structure, data collection, data preprocessing and neural network training and visualization about the end-to-end calibration of a vehicle, in two different scenarios: 
@@ -14,10 +65,10 @@ Launch Autoware as follows:
 ./autoware.sh
 ```
 
-and then record the topics we need to collect in order to train our model. The data we need to record are the pitch angle, the linear acceleration, the velocity, the braking and throttling values and the steering angle:
+It is recommended to record the topics we need to collect in order to train our model. The data we need to record are the pitch angle, the linear acceleration, the velocity, the braking and throttling values and the steering angle:
 
 ```
-ros2 bag record /sensing/gnss/chc/pitch /actuation_input /velocity_input /sensing/gnss/chc/imu
+ros2 bag record /sensing/combination_navigation/chc/pitch /vehicle/status/actuation_status /vehicle/status/steering_status /vehicle/status/velocity_status /vehicle/status/imu
 ```
 
 
@@ -27,29 +78,29 @@ ros2 bag record /sensing/gnss/chc/pitch /actuation_input /velocity_input /sensin
 
 data contains as follows and how to get value
 ```
-# brake paddle value (frome 0 to 100, float)
-/actuation_input -> brake_cmd
-# throttle paddle value (frome 0 to 100, float)
-/actuation_input -> accel_cmd
+# brake paddle value (frome 0 to 1, float)
+/vehicle/status/actuation_status -> status.brake_status
+# throttle paddle value (frome 0 to 1, float)
+/vehicle/status/actuation_status -> status.accel_status
 # velocity value (unit is m/s, float)
-/velocity_input -> longitudinal_velocity
-# steering value (frome -1 to 1, float)
-/actuation_input -> steer_cmd
+/vehicle/status/velocity_status -> longitudinal_velocity
+# steering value (from 0 to 0.5 [radians], float)
+/vehicle/status/steering_status -> steering_tire_angle
 # imu data(unit is rad/s or m/s)
-/sensing/gnss/chc/imu -> linear_acceleration.x
+/vehicle/status/imu -> linear_acceleration.x
 # pitch angle (unit is degrees)
-/sensing/gnss/chc/pitch -> data
+/sensing/combination_navigation/chc/pitch -> data
 ```
 
 
 
-- **run data monitor: data_monotor will check topic node and topic timegap**
+- **launch data collection and data monitor scripts**
 
 ```
-python3 data_monitor.py
+ros2 launch learning_based_vehicle_calibration calibration_launch.py
 ```
 
-By running data_monitor, we can make sure that we are receiving all the topics correctly, without any delay and any problem.
+Thanks to data_monitor script, we can make sure that we are receiving all the topics correctly, without any delay and any problem.
 
 You can have a look at the following examples:
 
@@ -97,11 +148,7 @@ As already stated, if the steering angle is greater than 2 degrees, data will no
 2. If the velocity is equal to 0km/h, we are not collecting data;
 3. We need to ensure data consistency. In order to do that, we need to check the values of two consecutive throttle/brake commands: if their difference is greater than a certain threshold, we don't collect those data.
 
-To launch the script:
 
-```
-python3 data_collection.py
-```
 This is how you will visualize the data that are being recorded. This visualization tool updates itself in real time based on the data we are collecting:
 
 ![data_collection1](./imgs/data_collection1.png)
@@ -159,14 +206,12 @@ Regarding the hidden layers, we can't know in advance how many layers and parame
 
 Now we can split the dataset into training set (80%) and testing set (20%) and we are ready for the training stage.
 
-We chose the LogSigmoid function as the activation function, mean square error as the cost function and Adam optimizer, all in Pytorch.
+We chose the ReLu function as the activation function, mean square error as the cost function and Adam optimizer, all in Pytorch.
 
-To start the training of the throttling and braking models and visualize their shapes and metrics, we can launch the following scripts:
+To start the training of the throttling and braking models and visualize their shapes and metrics, we can launch:
 
 ```
-python3 neural_network_throttle.py
-
-python3 neural_network_brake.py
+ros2 launch learning_based_vehicle_calibration neural_network_launch.py
 ```
 
 ![NN_throttle](./imgs/NN_throttle.png)
@@ -250,7 +295,7 @@ We don't collect data in the following cases:
 To launch the script:
 
 ```
-python3 data_collection_steer.py
+ros2 launch learning_based_vehicle_calibration calibration_steering_launch.py
 ```
 
 This is how you will visualize the data that are being recorded. This visualization tool updates itself in real time based on the data we are collecting:
@@ -283,12 +328,12 @@ Like the Longitudinal Dynamics case, here we find the relationship between veloc
 
 We will train 5 different models according to the steering range. The inputs of the neural network model are velocity and throttling command, and the output is the acceleration.
 
-Like before, we chose the LogSigmoid activation function, mean square error as the cost function and Adam optimizer, all in Pytorch.
+Like before, we chose the ReLu activation function, mean square error as the cost function and Adam optimizer, all in Pytorch.
 
-To start the training stage, visualize the model and save the calibration table in csv format, launch the following script (make sure to read the right csv file):
+To start the training stage, visualize the models and save the calibration tables in csv format, we can launch:
 
 ```
-python3 neural_network_steer.py
+ros2 launch learning_based_vehicle_calibration neural_network_steering_launch.py
 ```
 
 As stated above, you need to train 5 different models, so you will obtain 5 different calibration tables, according to the steering range.

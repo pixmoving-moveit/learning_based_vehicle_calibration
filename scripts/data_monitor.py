@@ -1,8 +1,9 @@
 #! /usr/bin/env python3
 import rclpy
 import rclpy.node
-from tier4_vehicle_msgs.msg import ActuationCommand
+from tier4_vehicle_msgs.msg import ActuationStatusStamped
 from autoware_auto_vehicle_msgs.msg import VelocityReport
+from autoware_auto_vehicle_msgs.msg import SteeringReport
 from std_msgs.msg import Float32
 from sensor_msgs.msg import Imu
 from can_msgs.msg import Frame
@@ -20,13 +21,14 @@ class DataMonitor(rclpy.node.Node):
         super().__init__('data_monitor')
 
         self.timer = self.create_timer(1, self.timer_callback)
-        self.create_subscription(ActuationCommand, '/actuation_input', self.brake_topic_callback, 10)
-        self.create_subscription(ActuationCommand, '/actuation_input', self.drive_topic_callback, 10)
-        self.create_subscription(ActuationCommand, '/actuation_input', self.steer_topic_callback, 10)
-        self.create_subscription(VelocityReport, '/velocity_input', self.velocity_topic_callback, 10)
-        self.create_subscription(Float32, '/sensing/gnss/chc/pitch', self.pitch_topic_callback, 10)
-        self.create_subscription(Imu, '/sensing/gnss/chc/imu', self.imu_topic_callback, 10)
+        self.create_subscription(ActuationStatusStamped, '/vehicle/status/actuation_status', self.brake_topic_callback, 10)
+        self.create_subscription(ActuationStatusStamped, '/vehicle/status/actuation_status', self.drive_topic_callback, 10)
+        self.create_subscription(SteeringReport, '/vehicle/status/steering_status', self.steer_topic_callback, 10)
+        self.create_subscription(VelocityReport, '/vehicle/status/velocity_status', self.velocity_topic_callback, 10)
+        self.create_subscription(Float32, '/sensing/combination_navigation/chc/pitch', self.pitch_topic_callback, 10)
+        self.create_subscription(Imu, '/vehicle/status/imu', self.imu_topic_callback, 10)
         self.create_subscription(Frame, '/from_can_bus', self.can_topic_callback, 10)
+
 
 
     def can_topic_callback(self, msg):
