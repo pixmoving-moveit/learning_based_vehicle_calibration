@@ -4,6 +4,8 @@ project(learning_based_vehicle_calibration)
 # find dependencies
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
+find_package(rosidl_default_generators REQUIRED)
+find_package(builtin_interfaces REQUIRED)
 
 install(
   PROGRAMS
@@ -24,6 +26,16 @@ install(
   DESTINATION lib/${PROJECT_NAME}
   
 )
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/LongitudinalProgress.msg"
+  "msg/SteeringProgress.msg"
+  DEPENDENCIES builtin_interfaces
+  )
+
+  
+
+ament_export_dependencies(rosidl_default_runtime)
 	
 
 # install

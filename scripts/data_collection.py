@@ -12,8 +12,14 @@ from autoware_auto_vehicle_msgs.msg import VelocityReport
 from autoware_auto_vehicle_msgs.msg import SteeringReport
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float32
+from std_msgs.msg import Header
+import time
+import rospy
 
 from tqdm import tqdm
+
+from learning_based_vehicle_calibration.msg import LongitudinalProgress
+from learning_based_vehicle_calibration.msg import LongitudinalProcesses
 
 class primotest(rclpy.node.Node):
 
@@ -124,6 +130,7 @@ class primotest(rclpy.node.Node):
             self.create_subscription(SteeringReport, '/vehicle/status/steering_status', self.steer_topic_callback, 1)
             self.create_subscription(VelocityReport, '/vehicle/status/velocity_status', self.velocity_topic_callback, 1)
             self.create_subscription(Imu, '/vehicle/status/imu', self.imu_topic_callback, 1)
+            self.progress = self.create_publisher(LongitudinalProcesses, '/scenarios_collection_longitudinal_progress', 10)
             self.timer = self.create_timer(0.02, self.test_callback)
 
             
@@ -247,11 +254,13 @@ class primotest(rclpy.node.Node):
 
 
       def test_callback(self):
-            
-            
-            # THROTTLING SCENARIO to train throttling model
+
+            long_processes_msg = LongitudinalProcesses()
+            long_progress_msg = LongitudinalProgress()
+
             if(len(self.queue_throttle)>=self.NUM_OF_QUEUE and(len(self.queue_braking)>=self.NUM_OF_QUEUE)):
 
+                  # THROTTLING SCENARIO to train throttling model
                   if(self.braking == 0 and abs(self.steering) < self.STEERING_THRESHOLD and abs(self.throttling_prec-mean(self.queue_throttle)) <= self.CONSISTENCY_THRESHOLD):
                         
                         #low velocity scenario
@@ -261,40 +270,90 @@ class primotest(rclpy.node.Node):
                               if(0 <= self.throttling <= self.THROTTLE_DEADZONE and self.k < self.MAX_DATA and self.flag == 0):
                                     
                                     self.collection_throttling()
-                                    
                                     self.progress_bar0.update(1)
-                                    
                                     self.k += 1
+
+                                    long_progress_msg.pedal_value_start = 0
+                                    long_progress_msg.pedal_value_end = self.THROTTLE_DEADZONE
+                                    long_progress_msg.velocity_start = 0
+                                    long_progress_msg.velocity_end = self.SPEED_THRESHOLD
+                                    long_progress_msg.data_count = self.k
+                                    long_progress_msg.progress = self.k*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[0] = Header()
+                                    long_processes_msg.headers[0].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[0].frame_id = "Throttle scenario 1"
+                                    long_processes_msg.processes[0] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
+
+
 
                               
                               elif(self.THROTTLE_DEADZONE < self.throttling <= self.THROTTLE_THRESHOLD1 and self.i < self.MAX_DATA):
                                     
                                     self.collection_throttling()
-                                    
                                     self.progress_bar1.update(1)
                                     self.flag = 0
-                                    
                                     self.i += 1
+
+                                    long_progress_msg.pedal_value_start = self.THROTTLE_DEADZONE
+                                    long_progress_msg.pedal_value_end = self.THROTTLE_THRESHOLD1
+                                    long_progress_msg.velocity_start = 0
+                                    long_progress_msg.velocity_end = self.SPEED_THRESHOLD
+                                    long_progress_msg.data_count = self.i
+                                    long_progress_msg.progress = self.i*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[1] = Header()
+                                    long_processes_msg.headers[1].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[1].frame_id = "Throttle scenario 2"
+                                    long_processes_msg.processes[1] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
 
 
                               elif(self.THROTTLE_THRESHOLD1 < self.throttling <= self.THROTTLE_THRESHOLD2 and self.j < self.MAX_DATA):
                                     
                                     self.collection_throttling()
-                                    
                                     self.progress_bar2.update(1)
                                     self.flag = 0
-                              
                                     self.j += 1
+
+                                    long_progress_msg.pedal_value_start = self.THROTTLE_THRESHOLD1
+                                    long_progress_msg.pedal_value_end = self.THROTTLE_THRESHOLD2
+                                    long_progress_msg.velocity_start = 0
+                                    long_progress_msg.velocity_end = self.SPEED_THRESHOLD
+                                    long_progress_msg.data_count = self.j
+                                    long_progress_msg.progress = self.j*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[2] = Header()
+                                    long_processes_msg.headers[2].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[2].frame_id = "Throttle scenario 3"
+                                    long_processes_msg.processes[2] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
 
 
                               elif(self.throttling > self.THROTTLE_THRESHOLD2 and self.h < self.MAX_DATA):
                                     
                                     self.collection_throttling()
-                                    
                                     self.progress_bar3.update(1)
                                     self.flag = 0
-                                    
                                     self.h += 1
+
+                                    long_progress_msg.pedal_value_start = self.THROTTLE_THRESHOLD2
+                                    long_progress_msg.pedal_value_end = 100
+                                    long_progress_msg.velocity_start = 0
+                                    long_progress_msg.velocity_end = self.SPEED_THRESHOLD
+                                    long_progress_msg.data_count = self.h
+                                    long_progress_msg.progress = self.hh*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[3] = Header()
+                                    long_processes_msg.headers[3].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[3].frame_id = "Throttle scenario 4"
+                                    long_processes_msg.processes[3] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
 
 
                         #high velocity scenario
@@ -304,46 +363,90 @@ class primotest(rclpy.node.Node):
                               if(0 <= self.throttling <= self.THROTTLE_DEADZONE and self.d < self.MAX_DATA and self.flag == 0):
                                     
                                     self.collection_throttling()
-                                    
                                     self.progress_bar4.update(1)
-                                    
                                     self.d += 1
+
+                                    long_progress_msg.pedal_value_start = 0
+                                    long_progress_msg.pedal_value_end = self.THROTTLE_DEADZONE
+                                    long_progress_msg.velocity_start = self.SPEED_THRESHOLD
+                                    long_progress_msg.velocity_end = self.MAX_VELOCITY
+                                    long_progress_msg.data_count = self.d
+                                    long_progress_msg.progress = self.d*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[4] = Header()
+                                    long_processes_msg.headers[4].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[4].frame_id = "Throttle scenario 5"
+                                    long_processes_msg.processes[4] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
 
 
                               elif(self.THROTTLE_DEADZONE < self.throttling <= self.THROTTLE_THRESHOLD1 and self.a < self.MAX_DATA):
                                     
                                     self.collection_throttling()
-                                    
                                     self.progress_bar5.update(1)
                                     self.flag = 0
-                                    
                                     self.a += 1
+
+                                    long_progress_msg.pedal_value_start = self.THROTTLE_DEADZONE
+                                    long_progress_msg.pedal_value_end = self.THROTTLE_THRESHOLD1
+                                    long_progress_msg.velocity_start = self.SPEED_THRESHOLD
+                                    long_progress_msg.velocity_end = self.MAX_VELOCITY
+                                    long_progress_msg.data_count = self.a
+                                    long_progress_msg.progress = self.a*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[5] = Header()
+                                    long_processes_msg.headers[5].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[5].frame_id = "Throttle scenario 6"
+                                    long_processes_msg.processes[5] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
 
 
                               elif(self.THROTTLE_THRESHOLD1 < self.throttling <= self.THROTTLE_THRESHOLD2 and self.b < self.MAX_DATA):
                                     
                                     self.collection_throttling()
-                                    
                                     self.progress_bar6.update(1)
                                     self.flag = 0
-                              
                                     self.b += 1
+
+                                    long_progress_msg.pedal_value_start = self.THROTTLE_THRESHOLD1
+                                    long_progress_msg.pedal_value_end = self.THROTTLE_THRESHOLD2
+                                    long_progress_msg.velocity_start = self.SPEED_THRESHOLD
+                                    long_progress_msg.velocity_end = self.MAX_VELOCITY
+                                    long_progress_msg.data_count = self.b
+                                    long_progress_msg.progress = self.b*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[6] = Header()
+                                    long_processes_msg.headers[6].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[6].frame_id = "Throttle scenario 7"
+                                    long_processes_msg.processes[6] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
 
                               elif(self.throttling > self.THROTTLE_THRESHOLD2 and self.c < self.MAX_DATA):
                                     
                                     self.collection_throttling()
-                                    
                                     self.progress_bar7.update(1)
                                     self.flag = 0
-                                    
                                     self.c += 1
 
+                                    long_progress_msg.pedal_value_start = self.THROTTLE_THRESHOLD2
+                                    long_progress_msg.pedal_value_end = 100
+                                    long_progress_msg.velocity_start = self.SPEED_THRESHOLD
+                                    long_progress_msg.velocity_end = self.MAX_VELOCITY
+                                    long_progress_msg.data_count = self.c
+                                    long_progress_msg.progress = self.c*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[7] = Header()
+                                    long_processes_msg.headers[7].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[7].frame_id = "Throttle scenario 8"
+                                    long_processes_msg.processes[7] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
+
 
                   
-                  
-                  
-
-
 
                   # BRAKING SCENARIO to train braking model
 
@@ -356,40 +459,88 @@ class primotest(rclpy.node.Node):
                               if(0 <= self.braking <= self.BRAKE_DEADZONE and self.kk < self.MAX_DATA and self.flag == 1):
                                     
                                     self.collection_braking()
-                                    
                                     self.progress_bar8.update(1)
-                                    
                                     self.kk += 1
+
+                                    long_progress_msg.pedal_value_start = 0
+                                    long_progress_msg.pedal_value_end = self.BRAKE_DEADZONE
+                                    long_progress_msg.velocity_start = 0
+                                    long_progress_msg.velocity_end = self.SPEED_THRESHOLD
+                                    long_progress_msg.data_count = self.kk
+                                    long_progress_msg.progress = self.kk*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[8] = Header()
+                                    long_processes_msg.headers[8].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[8].frame_id = "Brake scenario 1"
+                                    long_processes_msg.processes[8] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
 
 
                               elif(self.BRAKE_DEADZONE < self.braking <= self.BRAKE_THRESHOLD1 and self.ii < self.MAX_DATA):
                                     
                                     self.collection_braking()
-                                    
                                     self.progress_bar9.update(1)
                                     self.flag = 1
-                                    
                                     self.ii += 1
+
+                                    long_progress_msg.pedal_value_start = self.BRAKE_DEADZONE
+                                    long_progress_msg.pedal_value_end = self.BRAKE_THRESHOLD1
+                                    long_progress_msg.velocity_start = 0
+                                    long_progress_msg.velocity_end = self.SPEED_THRESHOLD
+                                    long_progress_msg.data_count = self.ii
+                                    long_progress_msg.progress = self.ii*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[9] = Header()
+                                    long_processes_msg.headers[9].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[9].frame_id = "Brake scenario 2"
+                                    long_processes_msg.processes[9] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
 
 
                               elif(self.BRAKE_THRESHOLD1 < self.braking <= self.BRAKE_THRESHOLD2 and self.jj < self.MAX_DATA):
                                     
                                     self.collection_braking()
-                                    
                                     self.progress_bar10.update(1)
                                     self.flag = 1
-                                    
                                     self.jj += 1
+
+                                    long_progress_msg.pedal_value_start = self.BRAKE_THRESHOLD1
+                                    long_progress_msg.pedal_value_end = self.BRAKE_THRESHOLD2
+                                    long_progress_msg.velocity_start = 0
+                                    long_progress_msg.velocity_end = self.SPEED_THRESHOLD
+                                    long_progress_msg.data_count = self.jj
+                                    long_progress_msg.progress = self.jj*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[10] = Header()
+                                    long_processes_msg.headers[10].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[10].frame_id = "Brake scenario 3"
+                                    long_processes_msg.processes[10] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
 
 
                               elif(self.braking > self.BRAKE_THRESHOLD2 and self.hh < self.MAX_DATA):
                                     
                                     self.collection_braking()
-                                    
                                     self.progress_bar11.update(1)
                                     self.flag = 1
-                                    
                                     self.hh += 1
+
+                                    long_progress_msg.pedal_value_start = self.BRAKE_THRESHOLD2
+                                    long_progress_msg.pedal_value_end = 100
+                                    long_progress_msg.velocity_start = 0
+                                    long_progress_msg.velocity_end = self.SPEED_THRESHOLD
+                                    long_progress_msg.data_count = self.hh
+                                    long_progress_msg.progress = self.hh*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[11] = Header()
+                                    long_processes_msg.headers[11].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[11].frame_id = "Brake scenario 4"
+                                    long_processes_msg.processes[11] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
 
 
                         #high velocity scenario
@@ -399,49 +550,93 @@ class primotest(rclpy.node.Node):
                               if(0 <= self.braking <= self.BRAKE_DEADZONE and self.dd < self.MAX_DATA and self.flag == 1):
                                     
                                     self.collection_braking()
-                                    
                                     self.progress_bar12.update(1)
-                                    
                                     self.dd += 1
+
+                                    long_progress_msg.pedal_value_start = 0
+                                    long_progress_msg.pedal_value_end = self.BRAKE_DEADZONE
+                                    long_progress_msg.velocity_start = self.SPEED_THRESHOLD
+                                    long_progress_msg.velocity_end = self.MAX_VELOCITY
+                                    long_progress_msg.data_count = self.dd
+                                    long_progress_msg.progress = self.dd*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[12] = Header()
+                                    long_processes_msg.headers[12].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[12].frame_id = "Brake scenario 5"
+                                    long_processes_msg.processes[12] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
 
                               elif(self.BRAKE_DEADZONE < self.braking <= self.BRAKE_THRESHOLD1 and self.aa < self.MAX_DATA):
                                     
                                     self.collection_braking()
-                                    
                                     self.progress_bar13.update(1)
                                     self.flag = 1
-                              
                                     self.aa += 1
+
+                                    long_progress_msg.pedal_value_start = self.BRAKE_DEADZONE
+                                    long_progress_msg.pedal_value_end = self.BRAKE_THRESHOLD1
+                                    long_progress_msg.velocity_start = self.SPEED_THRESHOLD
+                                    long_progress_msg.velocity_end = self.MAX_VELOCITY
+                                    long_progress_msg.data_count = self.aa
+                                    long_progress_msg.progress = self.aa*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[13] = Header()
+                                    long_processes_msg.headers[13].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[13].frame_id = "Brake scenario 6"
+                                    long_processes_msg.processes[13] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
 
 
                               elif(self.BRAKE_THRESHOLD1 < self.braking <= self.BRAKE_THRESHOLD2 and self.bb < self.MAX_DATA):
                                     
                                     self.collection_braking()
-                                    
                                     self.progress_bar14.update(1)
                                     self.flag = 1
-                                    
                                     self.bb += 1
+
+                                    long_progress_msg.pedal_value_start = self.BRAKE_THRESHOLD1
+                                    long_progress_msg.pedal_value_end = self.BRAKE_THRESHOLD2
+                                    long_progress_msg.velocity_start = self.SPEED_THRESHOLD
+                                    long_progress_msg.velocity_end = self.MAX_VELOCITY
+                                    long_progress_msg.data_count = self.bb
+                                    long_progress_msg.progress = self.bb*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[14] = Header()
+                                    long_processes_msg.headers[14].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[14].frame_id = "Brake scenario 7"
+                                    long_processes_msg.processes[14] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
                                     
 
                               elif(self.braking > self.BRAKE_THRESHOLD2 and self.cc < self.MAX_DATA):
                                     
                                     self.collection_braking()
-                                    
                                     self.progress_bar15.update(1)
                                     self.flag = 1  
-                                    
                                     self.cc += 1  
 
+                                    long_progress_msg.pedal_value_start = self.BRAKE_THRESHOLD2
+                                    long_progress_msg.pedal_value_end = 100
+                                    long_progress_msg.velocity_start = self.SPEED_THRESHOLD
+                                    long_progress_msg.velocity_end = self.MAX_VELOCITY
+                                    long_progress_msg.data_count = self.cc
+                                    long_progress_msg.progress = self.cc*100/self.MAX_DATA
+
+                                    long_processes_msg.headers[15] = Header()
+                                    long_processes_msg.headers[15].stamp = rospy.Time.from_sec(time.time())
+                                    long_processes_msg.headers[15].frame_id = "Brake scenario 8"
+                                    long_processes_msg.processes[15] = long_progress_msg
+
+                                    self.progress.publish(long_processes_msg)
+
 
             
             
 
-                              
-                              
-                              
-
-                                                    
+                                                                          
 
 def main():
       rclpy.init()

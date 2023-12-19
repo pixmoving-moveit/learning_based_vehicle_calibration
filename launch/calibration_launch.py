@@ -18,7 +18,7 @@ def generate_launch_description():
         launch.actions.DeclareLaunchArgument(
             'num_of_queue',
             default_value='20', 
-            description='Window size of mean filter to smooth data'
+            description='Window size of mean filter used to smooth data'
         ),
         launch.actions.DeclareLaunchArgument(
             'speed_threshold',
@@ -28,7 +28,7 @@ def generate_launch_description():
         launch.actions.DeclareLaunchArgument(
             'steering_threshold',
             default_value='0.03490658503988659',
-            description='Radians value which corresponds to 2 degrees, over which we do not collect data'
+            description='Steering radians value which corresponds to 2 degrees, over which we do not collect data'
         ),
         launch.actions.DeclareLaunchArgument(
             'throttle_deadzone',

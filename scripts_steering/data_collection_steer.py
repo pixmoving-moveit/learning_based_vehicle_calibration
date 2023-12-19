@@ -12,8 +12,14 @@ from autoware_auto_vehicle_msgs.msg import VelocityReport
 from autoware_auto_vehicle_msgs.msg import SteeringReport
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float32
+from std_msgs.msg import Header
+import time
+import rospy
 
 from tqdm import tqdm
+
+from learning_based_vehicle_calibration.msg import SteeringProgress
+from learning_based_vehicle_calibration.msg import SteeringProcesses
 
 class primotest(rclpy.node.Node):
 
@@ -152,6 +158,7 @@ class primotest(rclpy.node.Node):
             self.create_subscription(SteeringReport, '/vehicle/status/steering_status', self.steer_topic_callback, 1)
             self.create_subscription(VelocityReport, '/vehicle/status/velocity_status', self.velocity_topic_callback, 1)
             self.create_subscription(Imu, '/vehicle/status/imu', self.imu_topic_callback, 1)
+            self.progress = self.create_publisher(SteeringProcesses, '/scenarios_collection_steering_progress', 10)
             self.timer = self.create_timer(0.02, self.test_callback)
 
             
@@ -313,10 +320,11 @@ class primotest(rclpy.node.Node):
 
 
       def test_callback(self):
-            
-            
-            
 
+            steer_processes_msg = SteeringProcesses()
+            steer_progress_msg = SteeringProgress()
+            
+            
             if(0 < abs(self.velocity) <= self.MAX_VELOCITY):
                   
                   #low throttling scenario
@@ -326,46 +334,111 @@ class primotest(rclpy.node.Node):
                         if(self.STEERING_THR1 <= abs(self.steering) < self.STEERING_THR2 and self.k < self.MAX_DATA):
                               
                               self.collection_steering1()
-                              
                               self.progress_bar0.update(1)
-                              
                               self.k += 1
+
+                              steer_progress_msg.pedal_value_start = 0
+                              steer_progress_msg.pedal_value_end = self.THROTTLE_THRESHOLD
+                              steer_progress_msg.steering_value_start = self.STEERING_THR1
+                              steer_progress_msg.steering_value_end = self.STEERING_THR2
+                              steer_progress_msg.velocity_max = self.MAX_VELOCITY
+                              steer_progress_msg.data_count = self.k
+                              steer_progress_msg.progress = self.k*100/self.MAX_DATA
+
+                              steer_processes_msg.headers[0] = Header()
+                              steer_processes_msg.headers[0].stamp = rospy.Time.from_sec(time.time())
+                              steer_processes_msg.headers[0].frame_id = "Steering scenario 1"
+                              steer_processes_msg.processes[0] = steer_progress_msg
+
+                              self.progress.publish(steer_processes_msg)
 
                         
                         elif(self.STEERING_THR2 <= abs(self.steering) < self.STEERING_THR3 and self.i < self.MAX_DATA):
                               
                               self.collection_steering2()
-                              
                               self.progress_bar1.update(1)
-                              
                               self.i += 1
+
+                              steer_progress_msg.pedal_value_start = 0
+                              steer_progress_msg.pedal_value_end = self.THROTTLE_THRESHOLD
+                              steer_progress_msg.steering_value_start = self.STEERING_THR2
+                              steer_progress_msg.steering_value_end = self.STEERING_THR3
+                              steer_progress_msg.velocity_max = self.MAX_VELOCITY
+                              steer_progress_msg.data_count = self.i
+                              steer_progress_msg.progress = self.i*100/self.MAX_DATA
+
+                              steer_processes_msg.headers[1] = Header()
+                              steer_processes_msg.headers[1].stamp = rospy.Time.from_sec(time.time())
+                              steer_processes_msg.headers[1].frame_id = "Steering scenario 2"
+                              steer_processes_msg.processes[1] = steer_progress_msg
+
+                              self.progress.publish(steer_processes_msg)
 
 
                         elif(self.STEERING_THR3 <= abs(self.steering) < self.STEERING_THR4 and self.j < self.MAX_DATA):
                               
                               self.collection_steering3()
-                              
                               self.progress_bar2.update(1)
-                             
                               self.j += 1
+
+                              steer_progress_msg.pedal_value_start = 0
+                              steer_progress_msg.pedal_value_end = self.THROTTLE_THRESHOLD
+                              steer_progress_msg.steering_value_start = self.STEERING_THR3
+                              steer_progress_msg.steering_value_end = self.STEERING_THR4
+                              steer_progress_msg.velocity_max = self.MAX_VELOCITY
+                              steer_progress_msg.data_count = self.j
+                              steer_progress_msg.progress = self.j*100/self.MAX_DATA
+
+                              steer_processes_msg.headers[2] = Header()
+                              steer_processes_msg.headers[2].stamp = rospy.Time.from_sec(time.time())
+                              steer_processes_msg.headers[2].frame_id = "Steering scenario 3"
+                              steer_processes_msg.processes[2] = steer_progress_msg
+
+                              self.progress.publish(steer_processes_msg)
 
 
                         elif(self.STEERING_THR4 <= abs(self.steering) < self.STEERING_THR5 and self.h < self.MAX_DATA):
                               
                               self.collection_steering4()
-                              
                               self.progress_bar3.update(1)
-                              
                               self.h += 1
+
+                              steer_progress_msg.pedal_value_start = 0
+                              steer_progress_msg.pedal_value_end = self.THROTTLE_THRESHOLD
+                              steer_progress_msg.steering_value_start = self.STEERING_THR4
+                              steer_progress_msg.steering_value_end = self.STEERING_THR5
+                              steer_progress_msg.velocity_max = self.MAX_VELOCITY
+                              steer_progress_msg.data_count = self.h
+                              steer_progress_msg.progress = self.h*100/self.MAX_DATA
+
+                              steer_processes_msg.headers[3] = Header()
+                              steer_processes_msg.headers[3].stamp = rospy.Time.from_sec(time.time())
+                              steer_processes_msg.headers[3].frame_id = "Steering scenario 4"
+                              steer_processes_msg.processes[3] = steer_progress_msg
+
+                              self.progress.publish(steer_processes_msg)
 
 
                         elif(abs(self.steering) >= self.STEERING_THR5 and self.a < self.MAX_DATA):
 
                               self.collection_steering5()
-
                               self.progress_bar4.update(1)
-
                               self.a += 1
+
+                              steer_progress_msg.pedal_value_start = 0
+                              steer_progress_msg.pedal_value_end = self.THROTTLE_THRESHOLD
+                              steer_progress_msg.steering_value_start = self.STEERING_THR5
+                              steer_progress_msg.steering_value_end = 0.50
+                              steer_progress_msg.velocity_max = self.MAX_VELOCITY
+                              steer_progress_msg.data_count = self.a
+                              steer_progress_msg.progress = self.a*100/self.MAX_DATA
+
+                              steer_processes_msg.headers[4] = Header()
+                              steer_processes_msg.headers[4].stamp = rospy.Time.from_sec(time.time())
+                              steer_processes_msg.headers[4].frame_id = "Steering scenario 5"
+                              steer_processes_msg.processes[4] = steer_progress_msg
+
+                              self.progress.publish(steer_processes_msg)
 
 
 
@@ -378,46 +451,111 @@ class primotest(rclpy.node.Node):
                         if(self.STEERING_THR1 <= abs(self.steering) < self.STEERING_THR2 and self.kk < self.MAX_DATA):
                               
                               self.collection_steering1()
-                              
                               self.progress_bar10.update(1)
-                              
                               self.kk += 1
+
+                              steer_progress_msg.pedal_value_start = self.THROTTLE_THRESHOLD
+                              steer_progress_msg.pedal_value_end = 100
+                              steer_progress_msg.steering_value_start = self.STEERING_THR1
+                              steer_progress_msg.steering_value_end = self.STEERING_THR2
+                              steer_progress_msg.velocity_max = self.MAX_VELOCITY
+                              steer_progress_msg.data_count = self.kk
+                              steer_progress_msg.progress = self.kk*100/self.MAX_DATA
+
+                              steer_processes_msg.headers[5] = Header()
+                              steer_processes_msg.headers[5].stamp = rospy.Time.from_sec(time.time())
+                              steer_processes_msg.headers[5].frame_id = "Steering scenario 6"
+                              steer_processes_msg.processes[5] = steer_progress_msg
+
+                              self.progress.publish(steer_processes_msg)
 
                         
                         elif(self.STEERING_THR2 <= abs(self.steering) < self.STEERING_THR3 and self.ii < self.MAX_DATA):
                               
                               self.collection_steering2()
-                              
                               self.progress_bar11.update(1)
-                              
                               self.ii += 1
+
+                              steer_progress_msg.pedal_value_start = self.THROTTLE_THRESHOLD
+                              steer_progress_msg.pedal_value_end = 100
+                              steer_progress_msg.steering_value_start = self.STEERING_THR2
+                              steer_progress_msg.steering_value_end = self.STEERING_THR3
+                              steer_progress_msg.velocity_max = self.MAX_VELOCITY
+                              steer_progress_msg.data_count = self.ii
+                              steer_progress_msg.progress = self.ii*100/self.MAX_DATA
+
+                              steer_processes_msg.headers[6] = Header()
+                              steer_processes_msg.headers[6].stamp = rospy.Time.from_sec(time.time())
+                              steer_processes_msg.headers[6].frame_id = "Steering scenario 7"
+                              steer_processes_msg.processes[6] = steer_progress_msg
+
+                              self.progress.publish(steer_processes_msg)
 
 
                         elif(self.STEERING_THR3 <= abs(self.steering) < self.STEERING_THR4 and self.jj < self.MAX_DATA):
                               
                               self.collection_steering3()
-                              
                               self.progress_bar12.update(1)
-                             
                               self.jj += 1
+
+                              steer_progress_msg.pedal_value_start = self.THROTTLE_THRESHOLD
+                              steer_progress_msg.pedal_value_end = 100
+                              steer_progress_msg.steering_value_start = self.STEERING_THR3
+                              steer_progress_msg.steering_value_end = self.STEERING_THR4
+                              steer_progress_msg.velocity_max = self.MAX_VELOCITY
+                              steer_progress_msg.data_count = self.jj
+                              steer_progress_msg.progress = self.jj*100/self.MAX_DATA
+
+                              steer_processes_msg.headers[7] = Header()
+                              steer_processes_msg.headers[7].stamp = rospy.Time.from_sec(time.time())
+                              steer_processes_msg.headers[7].frame_id = "Steering scenario 8"
+                              steer_processes_msg.processes[7] = steer_progress_msg
+
+                              self.progress.publish(steer_processes_msg)
 
 
                         elif(self.STEERING_THR4 <= abs(self.steering) < self.STEERING_THR5 and self.hh < self.MAX_DATA):
                               
                               self.collection_steering4()
-                              
                               self.progress_bar13.update(1)
-                              
                               self.hh += 1
+
+                              steer_progress_msg.pedal_value_start = self.THROTTLE_THRESHOLD
+                              steer_progress_msg.pedal_value_end = 100
+                              steer_progress_msg.steering_value_start = self.STEERING_THR4
+                              steer_progress_msg.steering_value_end = self.STEERING_THR5
+                              steer_progress_msg.velocity_max = self.MAX_VELOCITY
+                              steer_progress_msg.data_count = self.hh
+                              steer_progress_msg.progress = self.hh*100/self.MAX_DATA
+
+                              steer_processes_msg.headers[8] = Header()
+                              steer_processes_msg.headers[8].stamp = rospy.Time.from_sec(time.time())
+                              steer_processes_msg.headers[8].frame_id = "Steering scenario 9"
+                              steer_processes_msg.processes[8] = steer_progress_msg
+
+                              self.progress.publish(steer_processes_msg)
 
 
                         elif(abs(self.steering) >= self.STEERING_THR5 and self.aa < self.MAX_DATA):
 
                               self.collection_steering5()
-
                               self.progress_bar14.update(1)
-
                               self.aa += 1
+
+                              steer_progress_msg.pedal_value_start = self.THROTTLE_THRESHOLD
+                              steer_progress_msg.pedal_value_end = 100
+                              steer_progress_msg.steering_value_start = self.STEERING_THR5
+                              steer_progress_msg.steering_value_end = 0.50
+                              steer_progress_msg.velocity_max = self.MAX_VELOCITY
+                              steer_progress_msg.data_count = self.aa
+                              steer_progress_msg.progress = self.aa*100/self.MAX_DATA
+
+                              steer_processes_msg.headers[9] = Header()
+                              steer_processes_msg.headers[9].stamp = rospy.Time.from_sec(time.time())
+                              steer_processes_msg.headers[9].frame_id = "Steering scenario 10"
+                              steer_processes_msg.processes[9] = steer_progress_msg
+
+                              self.progress.publish(steer_processes_msg)
 
 
                       

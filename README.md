@@ -16,9 +16,9 @@ Install the required libraries:
 pip install -r requirements.txt
 ```
 
-Make sure to place this package correcly inside your workspace, build it and source it.
+Make sure to place this package correcly inside your workspace, colcon build it and source it.
 
-## 2. Longitudinal Dynamics
+### 2. Longitudinal Dynamics
 
 To start collecting data, launch in your workspace:
 
@@ -28,13 +28,41 @@ ros2 launch learning_based_vehicle_calibration calibration_launch.py
 
 Inside this launch file there is a variable called 'Recovery_Mode', set to False by default. If while you were collecting data the software stopped for some reasons or something happened causing the interruption of your collection process, you can collect data recovering from previous breaking points by setting the variable to True. This way it will update the csv tables you have already started to collect without the need to start from scratch.
 
+You can visualize the collection process from the terminal. Otherwise, we built some custom messages for representing the progress that are being published on the following topic:
+
+```
+/scenarios_collection_longitudinal_progress
+```
+
+The structure of the message published to this topic is the following:
+
+```
+# LongitudinalProcesses.msg
+
+Header[15] headers
+LongitudinalProgress[15] processes
+```
+
+With LongitudinalProgress.msg being:
+
+```
+# LongitudinalProgress.msg
+
+float64 pedal_value_start
+float64 pedal_value_end
+float64 velocity_start
+float64 velocity_end
+int64 data_count
+int64 progress
+```
+
 Once you have collected the data, in order to train and build your black box models, launch:
 
 ```
 ros2 launch learning_based_vehicle_calibration neural_network_launch.py
 ```
 
-## 3. Lateral Dynamics
+### 3. Lateral Dynamics
 
 To start collecting data, launch in your workspace:
 
@@ -43,6 +71,35 @@ ros2 launch learning_based_vehicle_calibration calibration_steering_launch.py
 ```
 
 Also in this case, you can set the variable 'Recovery_Mode' to True if you need to recover from previous breaking points.
+
+Also in this case, we built some custom messages for representing the progress that are being published on the following topic:
+
+```
+/scenarios_collection_steering_progress
+```
+
+The structure of the message published to this topic is the following:
+
+```
+# SteeringProcesses.msg
+
+Header[9] headers
+LongitudinalProgress[9] processes
+```
+
+With SteeringProgress.msg being:
+
+```
+# SteeringProgress.msg
+
+float64 pedal_value_start
+float64 pedal_value_end
+float64 steering_value_start
+float64 steering_value_end
+float64 velocity_max
+int64 data_count
+int64 progress
+```
 
 To train and build your models, launch:
 

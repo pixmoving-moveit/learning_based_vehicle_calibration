@@ -1,0 +1,7 @@
+float64 pedal_value_start
+float64 pedal_value_end
+float64 steering_value_start
+float64 steering_value_end
+float64 velocity_max
+int64 data_count
+int64 progress
