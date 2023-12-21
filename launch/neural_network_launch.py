@@ -6,17 +6,17 @@ def generate_launch_description():
     return launch.LaunchDescription([
         launch.actions.DeclareLaunchArgument(
             'filter_vel_throttle',
-            default_value='10',
+            default_value='10.0',
             description='Outliers threshold removal for velocity data in neural_network_throttle model'
         ),
         launch.actions.DeclareLaunchArgument(
             'filter_cmd_throttle',
-            default_value='10',
+            default_value='10.0',
             description='Outliers threshold removal for throttle commands data in neural_network_throttle model'
         ),
         launch.actions.DeclareLaunchArgument(
             'filter_acc_throttle',
-            default_value='10',
+            default_value='10.0',
             description='Outliers threshold removal for acceleration data in neural_network_throttle model'
         ),
         launch.actions.DeclareLaunchArgument(
@@ -26,12 +26,12 @@ def generate_launch_description():
         ),
         launch.actions.DeclareLaunchArgument(
             'filter_cmd_brake',
-            default_value='10',
+            default_value='10.0',
             description='Outliers threshold removal for brake commands data in neural_network_brake model'
         ),
         launch.actions.DeclareLaunchArgument(
             'filter_acc_brake',
-            default_value='10',
+            default_value='10.0',
             description='Outliers threshold removal for acceleration data in neural_network_brake model'
         ),
 

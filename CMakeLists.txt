@@ -4,8 +4,9 @@ project(learning_based_vehicle_calibration)
 # find dependencies
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
+find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
-find_package(builtin_interfaces REQUIRED)
+# find_package(builtin_interfaces REQUIRED)
 
 install(
   PROGRAMS
@@ -22,6 +23,7 @@ install(
   scripts_steering/neural_network_steer4.py
   scripts_steering/neural_network_steer5.py
   scripts_steering/data_monitor_steer.py
+ 
 
   DESTINATION lib/${PROJECT_NAME}
   
@@ -30,12 +32,15 @@ install(
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/LongitudinalProgress.msg"
   "msg/SteeringProgress.msg"
-  DEPENDENCIES builtin_interfaces
+  "msg/LongitudinalProcesses.msg"
+  "msg/SteeringProcesses.msg"
+  DEPENDENCIES std_msgs
+  
   )
 
   
 
-ament_export_dependencies(rosidl_default_runtime)
+# ament_export_dependencies(rosidl_default_runtime)
 	
 
 # install

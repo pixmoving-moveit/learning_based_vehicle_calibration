@@ -1,2 +1,2 @@
-Header[9] headers
-SteeringProgress[9] processes
+std_msgs/Header header
+learning_based_vehicle_calibration/SteeringProgress[] processes

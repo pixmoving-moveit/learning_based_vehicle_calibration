@@ -1,5 +1,5 @@
-float64 pedal_value_start
-float64 pedal_value_end
+int64 pedal_value_start
+int64 pedal_value_end
 float64 velocity_start
 float64 velocity_end
 int64 data_count

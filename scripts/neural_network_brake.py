@@ -44,10 +44,15 @@ class NeuralNetworkBrake(Node):
         data = pd.read_csv('braking.csv')
         dataa = pd.read_csv('braking.csv')
 
+        # declare params from launch file
+        self.declare_parameter('filter_vel_brake', 1.5)
+        self.declare_parameter('filter_cmd_brake', 10.0)
+        self.declare_parameter('filter_acc_brake', 10.0)
+
         # Load params from launch file
-        self.FILTER_VEL_BRAKE = self.declare_parameter('filter_vel_brake').get_parameter_value().double_value
-        self.FILTER_CMD_BRAKE = self.declare_parameter('filter_cmd_brake').get_parameter_value().integer_value
-        self.FILTER_ACC_BRAKE = self.declare_parameter('filter_acc_brake').get_parameter_value().integer_value 
+        self.FILTER_VEL_BRAKE = self.get_parameter('filter_vel_brake').get_parameter_value().double_value
+        self.FILTER_CMD_BRAKE = self.get_parameter('filter_cmd_brake').get_parameter_value().double_value
+        self.FILTER_ACC_BRAKE = self.get_parameter('filter_acc_brake').get_parameter_value().double_value 
 
         mean0 = data["Velocity"].mean()
         std0 = data["Velocity"].std()
@@ -121,15 +126,6 @@ class NeuralNetworkBrake(Node):
             test_loss = criterion(test_outputs, y_test.view(-1, 1))
             #print(f"Mean Squared Error on Test Data: {test_loss.item()}")
 
-        # Example: make predictions on new data
-        #new_data = np.array([[(4-mean0)/std0, (7-mean1)/std1], [(0.5-mean0)/std0, (50-mean1)/std1]])  
-        #new_data = scaler.transform(new_data)  # Normalize the new data
-        #new_data = torch.tensor(new_data, dtype=torch.float32)
-        #with torch.no_grad():
-            #predictions = model(new_data)*std2+mean2
-            #print("Predicted Commands for New Data:")
-            #for i, pred in enumerate(predictions):
-                #print(f"Data {i + 1}: {pred.item()}")
 
         # Visualization
 
@@ -156,18 +152,16 @@ class NeuralNetworkBrake(Node):
 
         # evaluation
         mse = mean_squared_error(y_test, test_outputs.view(-1).numpy())
-        print(f"Mean Squared Error on Test Data: {mse}")
+        self.get_logger().info(f"Mean Squared Error on Test Data: {mse}")
 
         mae = mean_absolute_error(y_test, test_outputs.view(-1).numpy())
-        print(f"Mean Absolute Error on Test Data: {mae}")
+        self.get_logger().info(f"Mean Absolute Error on Test Data: {mae}")
 
         rmse = np.sqrt(mse)
-        print(f"Root Mean Squared Error on Test Data: {rmse}")
+        self.get_logger().info(f"Root Mean Squared Error on Test Data: {rmse}")
 
         r2 = r2_score(y_test, test_outputs.view(-1).numpy())
-        print(f"R-squared (R2) Score on Test Data: {r2}")
-
-
+        self.get_logger().info(f"R-squared (R2) Score on Test Data: {r2}")
 
 
         # Save NN model in csv correct format for testing in the real vehicle

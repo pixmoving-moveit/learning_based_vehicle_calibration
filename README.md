@@ -28,19 +28,21 @@ ros2 launch learning_based_vehicle_calibration calibration_launch.py
 
 Inside this launch file there is a variable called 'Recovery_Mode', set to False by default. If while you were collecting data the software stopped for some reasons or something happened causing the interruption of your collection process, you can collect data recovering from previous breaking points by setting the variable to True. This way it will update the csv tables you have already started to collect without the need to start from scratch.
 
-You can visualize the collection process from the terminal. Otherwise, we built some custom messages for representing the progress that are being published on the following topic:
+You can visualize the collection process from the terminal. Otherwise, we built some custom messages for representing the progress that are being published on the following topics:
 
 ```
-/scenarios_collection_longitudinal_progress
+/scenarios_collection_longitudinal_throttling
+
+/scenarios_collection_longitudinal_braking
 ```
 
-The structure of the message published to this topic is the following:
+The structure of the message published to these topics is the following:
 
 ```
 # LongitudinalProcesses.msg
 
-Header[15] headers
-LongitudinalProgress[15] processes
+std_msgs/Header header
+learning_based_vehicle_calibration/LongitudinalProgress[] processes
 ```
 
 With LongitudinalProgress.msg being:
@@ -56,7 +58,7 @@ int64 data_count
 int64 progress
 ```
 
-Once you have collected the data, in order to train and build your black box models, launch:
+Once you have collected the data, in order to train and build your black box models, for both throttling and braking scenarios, launch:
 
 ```
 ros2 launch learning_based_vehicle_calibration neural_network_launch.py
@@ -83,8 +85,8 @@ The structure of the message published to this topic is the following:
 ```
 # SteeringProcesses.msg
 
-Header[9] headers
-LongitudinalProgress[9] processes
+std_msgs/Header header
+learning_based_vehicle_calibration/SteeringProgress[] processes
 ```
 
 With SteeringProgress.msg being:

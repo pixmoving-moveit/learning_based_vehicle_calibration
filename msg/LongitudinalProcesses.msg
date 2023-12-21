@@ -1,2 +1,2 @@
-Header[15] headers
-LongitudinalProgress[15] processes
+std_msgs/Header header
+learning_based_vehicle_calibration/LongitudinalProgress[] processes

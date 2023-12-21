@@ -3,7 +3,7 @@ import launch_ros.actions
 import os
 from launch.actions import OpaqueFunction
 
-def launch_data_monitor_steer():
+def launch_data_monitor_steer(context):
     # Open a new terminal and run data_monitor.py
     os.system("gnome-terminal -- /bin/bash -c 'ros2 run learning_based_vehicle_calibration data_monitor_steer.py; exec bash'")
 
@@ -16,7 +16,7 @@ def generate_launch_description():
         ),
         launch.actions.DeclareLaunchArgument(
             'max_velocity',
-            default_value='7.0/3.6', 
+            default_value='1.95', 
             description='Max speed in m/s over which we do not collect data'
         ),
         launch.actions.DeclareLaunchArgument(
