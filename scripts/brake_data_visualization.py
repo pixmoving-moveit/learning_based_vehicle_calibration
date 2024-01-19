@@ -4,12 +4,12 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 
 # Read the data
-columns = ["Velocity", "Braking", "Acceleration_with_pitch_comp"]
+columns = ["Velocity", "Braking", "Acceleration_measured"]
 df = pd.read_csv("braking.csv", usecols=columns)
 
 xdata = df.Velocity
 ydata = df.Braking
-zdata = df.Acceleration_with_pitch_comp
+zdata = df.Acceleration_measured
 
 # Fit a linear regression model
 X = np.column_stack((xdata, ydata))
@@ -44,7 +44,7 @@ ax.set_zlabel('Acceleration')
 ax.set_ylabel('Braking Output')
 
 
-cbar = plt.colorbar(sc, ax=ax, label='Acceleration_with_pitch_comp')
+cbar = plt.colorbar(sc, ax=ax, label='Acceleration_measured')
 
 plt.show()
 
