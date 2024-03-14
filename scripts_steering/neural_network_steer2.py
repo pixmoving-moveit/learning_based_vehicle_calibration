@@ -44,6 +44,7 @@ class NeuralNetworkSteering2(Node):
         
         data = pd.read_csv('steering_02.csv')
         dataa = pd.read_csv('steering_02.csv')
+        ush = pd.read_csv('steering_02.csv')
 
 
         columns = ["Velocity", "Throttling", "Acceleration_measured"]
@@ -209,6 +210,29 @@ class NeuralNetworkSteering2(Node):
         # CHANGE THE TITLE OF THE PLOT DEPENDING ON THE CSV TABLE YOU ARE VISUALIZING
 
         ax.set_title('Neural Network Output vs. Velocity and Throttling | Steering 2')
+
+        plt.figure(figsize=(10, 6))
+        plt.subplot(3, 1, 1)
+        plt.hist(ush['Velocity'], bins=20, color='skyblue', edgecolor='black')
+        plt.title('Distribution of Velocity - Table 2')
+        plt.xlabel('Velocity')
+        plt.ylabel('Frequency')
+
+        # Plot the distribution of 'Throttling'
+        plt.subplot(3, 1, 2)
+        plt.hist(ush['Throttling'], bins=20, color='salmon', edgecolor='black')
+        plt.title('Distribution of Throttling - Table 2')
+        plt.xlabel('Throttling')
+        plt.ylabel('Frequency')
+
+        # Plot the distribution of 'Acceleration_measured'
+        plt.subplot(3, 1, 3)
+        plt.hist(ush['Acceleration_measured'], bins=20, color='lightgreen', edgecolor='black')
+        plt.title('Distribution of Acceleration - Table 2')
+        plt.xlabel('Acceleration')
+        plt.ylabel('Frequency')
+
+        plt.tight_layout()
 
         fig.colorbar(surf)
 

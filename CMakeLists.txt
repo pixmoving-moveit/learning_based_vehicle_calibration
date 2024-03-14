@@ -47,5 +47,4 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 ament_auto_package(
   INSTALL_TO_SHARE
   launch
-  config
 )

@@ -46,6 +46,7 @@ class NeuralNetworkThrottle(Node):
 
         data = pd.read_csv('throttling.csv')
         dataa = pd.read_csv('throttling.csv')
+        ush = pd.read_csv('throttling.csv')
 
 
         # Declare params from launch file
@@ -197,6 +198,29 @@ class NeuralNetworkThrottle(Node):
         ax.set_ylabel('Throttling Output')
         ax.set_title('Neural Network Output vs. Velocity and Throttling')
 
+        plt.figure(figsize=(10, 6))
+        plt.subplot(3, 1, 1)
+        plt.hist(ush['Velocity'], bins=20, color='skyblue', edgecolor='black')
+        plt.title('Distribution of Velocity')
+        plt.xlabel('Velocity')
+        plt.ylabel('Frequency')
+
+        # Plot the distribution of 'Throttling'
+        plt.subplot(3, 1, 2)
+        plt.hist(ush['Throttling'], bins=20, color='salmon', edgecolor='black')
+        plt.title('Distribution of Throttling')
+        plt.xlabel('Throttling')
+        plt.ylabel('Frequency')
+
+        # Plot the distribution of 'Acceleration_measured'
+        plt.subplot(3, 1, 3)
+        plt.hist(ush['Acceleration_measured'], bins=20, color='lightgreen', edgecolor='black')
+        plt.title('Distribution of Acceleration')
+        plt.xlabel('Acceleration')
+        plt.ylabel('Frequency')
+
+        plt.tight_layout()
+    
         fig.colorbar(surf)
 
         plt.show()

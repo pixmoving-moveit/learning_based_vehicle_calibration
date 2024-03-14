@@ -43,6 +43,7 @@ class NeuralNetworkBrake(Node):
 
         data = pd.read_csv('braking.csv')
         dataa = pd.read_csv('braking.csv')
+        ush = pd.read_csv('braking.csv')
 
         # declare params from launch file
         self.declare_parameter('filter_vel_brake', 1.5)
@@ -200,6 +201,29 @@ class NeuralNetworkBrake(Node):
         ax.set_zlabel('Acceleration')
         ax.set_ylabel('Braking Output')
         ax.set_title('Neural Network Output vs. Velocity and Braking')
+
+        plt.figure(figsize=(10, 6))
+        plt.subplot(3, 1, 1)
+        plt.hist(ush['Velocity'], bins=20, color='skyblue', edgecolor='black')
+        plt.title('Distribution of Velocity')
+        plt.xlabel('Velocity')
+        plt.ylabel('Frequency')
+
+        # Plot the distribution of 'Throttling'
+        plt.subplot(3, 1, 2)
+        plt.hist(ush['Braking'], bins=20, color='salmon', edgecolor='black')
+        plt.title('Distribution of Braking')
+        plt.xlabel('Braking')
+        plt.ylabel('Frequency')
+
+        # Plot the distribution of 'Acceleration_measured'
+        plt.subplot(3, 1, 3)
+        plt.hist(ush['Acceleration_measured'], bins=20, color='lightgreen', edgecolor='black')
+        plt.title('Distribution of Acceleration')
+        plt.xlabel('Acceleration')
+        plt.ylabel('Frequency')
+
+        plt.tight_layout()
 
         fig.colorbar(surf)
 

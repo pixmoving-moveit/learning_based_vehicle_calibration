@@ -50,8 +50,8 @@ With LongitudinalProgress.msg being:
 ```
 # LongitudinalProgress.msg
 
-float64 pedal_value_start
-float64 pedal_value_end
+int64 pedal_value_start
+int64 pedal_value_end
 float64 velocity_start
 float64 velocity_end
 int64 data_count
@@ -94,8 +94,8 @@ With SteeringProgress.msg being:
 ```
 # SteeringProgress.msg
 
-float64 pedal_value_start
-float64 pedal_value_end
+int64 pedal_value_start
+int64 pedal_value_end
 float64 steering_value_start
 float64 steering_value_end
 float64 velocity_max
@@ -284,6 +284,11 @@ This way, when you want to use the neural network model, you can avoid to train 
 
 
 These scripts will also create the acceleration and braking offline tables.
+
+Finally, the script will also plot the distribution of velocity, throttling/braking levels and acceleration data:
+
+![dioss](./imgs/dioss.png)
+
 
 
 ## Evaluation and Results
