@@ -16,7 +16,7 @@ def generate_launch_description():
 
         launch.actions.DeclareLaunchArgument(
             name='max_data',
-            default_value='1500',
+            default_value='1000',
             description='Max number of data to collect for each scenario'
         ),
         launch.actions.DeclareLaunchArgument(
@@ -26,7 +26,8 @@ def generate_launch_description():
         ),
         launch.actions.DeclareLaunchArgument(
             name='speed_threshold',
-            default_value='2.8', 
+            # default_value='2.8', 
+            default_value='5.0', 
             description='Threshold between low and high speeds in m/s'
         ),
         launch.actions.DeclareLaunchArgument(
@@ -55,19 +56,9 @@ def generate_launch_description():
             description='Threshold throttle percentage 1'
         ),
         launch.actions.DeclareLaunchArgument(
-            name='throttle_threshold2',
-            default_value='55',
-            description='Threshold throttle percentage 2'
-        ),
-        launch.actions.DeclareLaunchArgument(
             name='brake_threshold1',
-            default_value='15',
-            description='Threshold brake percentage 1'
-        ),
-        launch.actions.DeclareLaunchArgument(
-            name='brake_threshold2',
             default_value='25',
-            description='Threshold brake percentage 2'
+            description='Threshold brake percentage 1'
         ),
         launch.actions.DeclareLaunchArgument(
             name='consistency_threshold',
@@ -77,7 +68,8 @@ def generate_launch_description():
         # Add launch arguments for topic names
         launch.actions.DeclareLaunchArgument(
             name='pitch_topic',
-            default_value='/sensing/gnss/chc/pitch',
+            # default_value='/sensing/gnss/chc/pitch',
+            default_value='/sensing/gnss/pitch',
             description='Topic for pitch data'
         ),
         launch.actions.DeclareLaunchArgument(
@@ -97,7 +89,8 @@ def generate_launch_description():
         ),
         launch.actions.DeclareLaunchArgument(
             name='imu_topic',
-            default_value='/sensing/gnss/chc/imu',
+            # default_value='/sensing/gnss/chc/imu',
+            default_value='/sensing/gnss/imu',
             description='Topic for IMU data'
         ),
 
@@ -126,9 +119,9 @@ def generate_launch_description():
                 {'brake_deadzone': launch.substitutions.LaunchConfiguration('brake_deadzone')},
                 {'max_velocity': launch.substitutions.LaunchConfiguration('max_velocity')},
                 {'throttle_threshold1': launch.substitutions.LaunchConfiguration('throttle_threshold1')},
-                {'throttle_threshold2': launch.substitutions.LaunchConfiguration('throttle_threshold2')},
+                # {'throttle_threshold2': launch.substitutions.LaunchConfiguration('throttle_threshold2')},
                 {'brake_threshold1': launch.substitutions.LaunchConfiguration('brake_threshold1')},
-                {'brake_threshold2': launch.substitutions.LaunchConfiguration('brake_threshold2')},
+                # {'brake_threshold2': launch.substitutions.LaunchConfiguration('brake_threshold2')},
                 {'consistency_threshold': launch.substitutions.LaunchConfiguration('consistency_threshold')},
                 {'pitch_topic': launch.substitutions.LaunchConfiguration('pitch_topic')},
                 {'actuation_status_topic': launch.substitutions.LaunchConfiguration('actuation_status_topic')},
