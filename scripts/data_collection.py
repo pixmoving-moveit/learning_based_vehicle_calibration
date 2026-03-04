@@ -190,12 +190,12 @@ class primotest(rclpy.node.Node):
             
             # high speed throttle progress msgs and data count
             # high speed brake progress msgs and data count
-            self.long_progress_throttle_msg[3].pedal_value_start = 0.0
+            self.long_progress_throttle_msg[3].pedal_value_start = 0
             self.long_progress_throttle_msg[3].pedal_value_end = self.THROTTLE_DEADZONE
             self.long_progress_throttle_msg[3].velocity_start = self.SPEED_THRESHOLD
             self.long_progress_throttle_msg[3].velocity_end = self.MAX_VELOCITY
             self.long_processes_throttle_msg.processes[3] = self.long_progress_throttle_msg[3]
-            self.long_progress_brake_msg[3].pedal_value_start = 0.0
+            self.long_progress_brake_msg[3].pedal_value_start = 0
             self.long_progress_brake_msg[3].pedal_value_end = self.BRAKE_DEADZONE
             self.long_progress_brake_msg[3].velocity_start = self.SPEED_THRESHOLD
             self.long_progress_brake_msg[3].velocity_end = self.MAX_VELOCITY
