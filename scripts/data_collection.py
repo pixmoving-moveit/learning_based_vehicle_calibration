@@ -46,7 +46,7 @@ class primotest(rclpy.node.Node):
             self.declare_parameter('speed_threshold', 5.0)
             self.declare_parameter('steering_threshold', 0.03490658503988659)
             self.declare_parameter('throttle_deadzone', 5)
-            self.declare_parameter('brake_deadzone', 5)
+            self.declare_parameter('brake_deadzone', 10)
             self.declare_parameter('max_velocity', 11.1)
             self.declare_parameter('throttle_threshold1', 30)
             # self.declare_parameter('throttle_threshold2', 55)
@@ -244,7 +244,7 @@ class primotest(rclpy.node.Node):
             self.progress_bar4 = tqdm(initial = self.d, total = self.MAX_DATA, desc = "                                        High speed: Throttle deadzone - " + str(self.THROTTLE_THRESHOLD1), dynamic_ncols=True)
             self.progress_bar5 = tqdm(initial = self.a, total = self.MAX_DATA, desc = "                                        High speed: Throttle > " + str(self.THROTTLE_THRESHOLD1) + "         ", dynamic_ncols=True)
             
-            self.progress_bar6 = tqdm(initial = self.kk, total = self.MAX_DATA, desc = "                                        Low speed: 0 - Brake deadzone  ", dynamic_ncols=True)
+            self.progress_bar6 = tqdm(initial = self.kk, total = self.MAX_DATA, desc = "                                        Low speed: 0 - Brake deadzone    ", dynamic_ncols=True)
             self.progress_bar7 = tqdm(initial = self.ii, total = self.MAX_DATA, desc = "                                        Low speed: Brake deadzone - " + str(self.BRAKE_THRESHOLD1) + "    ", dynamic_ncols=True)
             self.progress_bar8 = tqdm(initial = self.jj, total = self.MAX_DATA, desc = "                                        Low speed: Brake > " + str(self.BRAKE_THRESHOLD1) + "             ", dynamic_ncols=True) 
             self.progress_bar9 = tqdm(initial = self.hh, total = self.MAX_DATA, desc = "                                        High speed: 0 - Brake deadzone    ", dynamic_ncols=True)

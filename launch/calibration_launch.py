@@ -42,7 +42,7 @@ def generate_launch_description():
         ),
         launch.actions.DeclareLaunchArgument(
             name='brake_deadzone',
-            default_value='5',
+            default_value='10',
             description='Percentage of break deadzone'
         ),
         launch.actions.DeclareLaunchArgument(
