@@ -26,8 +26,8 @@ def generate_launch_description():
         ),
         launch.actions.DeclareLaunchArgument(
             name='speed_threshold',
-            # default_value='2.8', 
-            default_value='5.0', 
+            default_value='2.8', 
+            # default_value='5.0', 
             description='Threshold between low and high speeds in m/s'
         ),
         launch.actions.DeclareLaunchArgument(
@@ -42,7 +42,7 @@ def generate_launch_description():
         ),
         launch.actions.DeclareLaunchArgument(
             name='brake_deadzone',
-            default_value='15',
+            default_value='5',
             description='Percentage of break deadzone'
         ),
         launch.actions.DeclareLaunchArgument(
@@ -57,7 +57,7 @@ def generate_launch_description():
         ),
         launch.actions.DeclareLaunchArgument(
             name='brake_threshold1',
-            default_value='30',
+            default_value='25',
             description='Threshold brake percentage 1'
         ),
         launch.actions.DeclareLaunchArgument(
