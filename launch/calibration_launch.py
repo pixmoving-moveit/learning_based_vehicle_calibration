@@ -16,7 +16,7 @@ def generate_launch_description():
 
         launch.actions.DeclareLaunchArgument(
             name='max_data',
-            default_value='1000',
+            default_value='1500',
             description='Max number of data to collect for each scenario'
         ),
         launch.actions.DeclareLaunchArgument(
