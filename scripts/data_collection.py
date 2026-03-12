@@ -505,7 +505,7 @@ class primotest(rclpy.node.Node):
 
                         if(0 < abs(self.velocity) <= self.SPEED_THRESHOLD):
                               
-                              if(0 <= self.braking <= self.BRAKE_DEADZONE and self.kk < self.MAX_DATA and self.flag == 1):
+                              if(0 <= self.braking <= self.BRAKE_DEADZONE and self.kk < self.MAX_DATA):
                                     
                                     self.collection_braking()
                                     self.progress_bar6.update(1)
@@ -539,7 +539,7 @@ class primotest(rclpy.node.Node):
 
                         elif(self.SPEED_THRESHOLD < abs(self.velocity) <= self.MAX_VELOCITY):
                               
-                              if(0 <= self.braking <= self.BRAKE_DEADZONE and self.hh < self.MAX_DATA and self.flag == 1):
+                              if(0 <= self.braking <= self.BRAKE_DEADZONE and self.hh < self.MAX_DATA):
                                     
                                     self.collection_braking()
                                     self.progress_bar9.update(1)
