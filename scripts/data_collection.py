@@ -284,33 +284,28 @@ class primotest(rclpy.node.Node):
             
             self.pitch_angle = float(msg.data)
             # apply a mean filter
-            if(len(self.queue_pitch_angle)<self.NUM_OF_QUEUE):
-                  self.queue_pitch_angle.append(self.pitch_angle)
-            else:
+            self.queue_pitch_angle.append(self.pitch_angle)
+            if(len(self.queue_pitch_angle) > self.NUM_OF_QUEUE):
                   self.queue_pitch_angle.popleft()
-            
-                        
                         
                   
       def velocity_topic_callback(self, msg):
             self.velocity = float(msg.longitudinal_velocity)
-            if(len(self.queue_velocity)<self.NUM_OF_QUEUE):
-                  self.queue_velocity.append(self.velocity)
-            else:
+            self.queue_velocity.append(self.velocity)
+            if(len(self.queue_velocity) > self.NUM_OF_QUEUE):
                   self.queue_velocity.popleft()
 
 
       def actuation_topic_callback(self, msg):
             
             self.braking = float(msg.status.brake_status)*100.0
-            if(len(self.queue_braking)<self.NUM_OF_QUEUE):
-                  self.queue_braking.append(self.braking)
-            else:
+            self.queue_braking.append(self.braking)
+            if(len(self.queue_braking) > self.NUM_OF_QUEUE):
                   self.queue_braking.popleft()
+            
             self.throttling = float(msg.status.accel_status)*100.0
-            if(len(self.queue_throttle)<self.NUM_OF_QUEUE):
-                  self.queue_throttle.append(self.throttling)
-            else:
+            self.queue_throttle.append(self.throttling)
+            if(len(self.queue_throttle) > self.NUM_OF_QUEUE):
                   self.queue_throttle.popleft()
                   
 
@@ -318,16 +313,13 @@ class primotest(rclpy.node.Node):
             
             self.steering = float(msg.steering_tire_angle)
             
-            
 
       def imu_topic_callback(self, msg):
             
             self.acceleration = float(msg.linear_acceleration.x)
-            if(len(self.queue_acceleration)<self.NUM_OF_QUEUE):
-                  self.queue_acceleration.append(self.acceleration)
-            else:
+            self.queue_acceleration.append(self.acceleration)
+            if(len(self.queue_acceleration) > self.NUM_OF_QUEUE):
                   self.queue_acceleration.popleft()
-                        
                         
                         
       def collection_throttling(self):
