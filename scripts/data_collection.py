@@ -281,7 +281,18 @@ class primotest(rclpy.node.Node):
 
 
       def pitch_topic_callback(self, msg):
+            """_summary_
+            pitch = 车身纵轴 与 水平面 的夹角，IMU/GNSS 测量的是车身姿态
             
+            Args:
+                msg (float): pitch 角的原始值，(CHC 设备惯例，车头朝上为正)
+            举例说明：
+            坡道物理角度	   车头朝向	      pitch 读数
+            上坡 5°	      朝上（前进）	+5°
+            上坡 5°	      朝下（倒车）	-5°
+            下坡 5°	      朝下（前进）	-5°
+            下坡 5°	      朝上（倒车）	+5°
+            """
             self.pitch_angle = float(msg.data)
             # apply a mean filter
             self.queue_pitch_angle.append(self.pitch_angle)
@@ -327,10 +338,18 @@ class primotest(rclpy.node.Node):
             self.vel.append(abs(mean(self.queue_velocity)))
             self.cmd.append(mean(self.queue_throttle))
             if(mean(self.queue_velocity) < 0):
+                  #     acc = a_IMU − g·sin(pitch)     ← 跟前进相同的公式
+                  # 但倒车的行驶方向是 −body_x，所以：
+                  # acc = −a_body_x
+                  #     = −(a_IMU − g·sin(pitch))
+                  #     = −a_IMU + g·sin(pitch)         ← 代码里正是这个
                   self.acc.append(-1*mean(self.queue_acceleration)-self.g*math.sin(math.radians(-1*mean(self.queue_pitch_angle))))
                   self.acc2.append(-1*mean(self.queue_acceleration))
                   self.pitch.append(-1*mean(self.queue_pitch_angle))
             else:
+                  # 前进 (vel ≥ 0):
+                  #       acc = a_IMU − g·sin(pitch) 
+                  # 意义:body-x 方向的真实加速度（去掉重力偏置）
                   self.acc.append(mean(self.queue_acceleration)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle))))
                   self.acc2.append(mean(self.queue_acceleration))
                   self.pitch.append(mean(self.queue_pitch_angle))
@@ -363,7 +382,7 @@ class primotest(rclpy.node.Node):
             self.velb.append(abs(mean(self.queue_velocity)))
             self.cmdb.append(mean(self.queue_braking))
             if(mean(self.queue_velocity) < 0):
-                  self.accb.append(-1*mean(self.queue_acceleration)-self.g*math.sin(math.radians(mean(self.queue_pitch_angle))))
+                  self.accb.append(-1*mean(self.queue_acceleration)-self.g*math.sin(math.radians(-1*mean(self.queue_pitch_angle))))
                   self.accb2.append(-1*mean(self.queue_acceleration))
                   self.pitch2.append(-1*mean(self.queue_pitch_angle))
             else:
