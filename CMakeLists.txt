@@ -12,6 +12,7 @@ install(
   PROGRAMS
   scripts/data_collection.py
   scripts/data_monitor.py
+  scripts/map_quality_utils.py
   scripts/neural_network_brake.py
   scripts/neural_network_throttle.py
   scripts/throttle_data_visualization.py
