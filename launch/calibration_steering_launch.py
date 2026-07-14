@@ -1,11 +1,6 @@
 import launch
 import launch_ros.actions
-import os
-from launch.actions import OpaqueFunction
 
-def launch_data_monitor_steer(context):
-    # Open a new terminal and run data_monitor.py
-    os.system("gnome-terminal -- /bin/bash -c 'ros2 run learning_based_vehicle_calibration data_monitor_steer.py; exec bash'")
 
 def generate_launch_description():
     return launch.LaunchDescription([
@@ -52,7 +47,7 @@ def generate_launch_description():
         # Add launch arguments for topic names
         launch.actions.DeclareLaunchArgument(
             name='pitch_topic',
-            default_value='/sensing/gnss/chc/pitch',
+            default_value='/sensing/gnss/pitch',
             description='Topic for pitch data'
         ),
         launch.actions.DeclareLaunchArgument(
@@ -72,7 +67,7 @@ def generate_launch_description():
         ),
         launch.actions.DeclareLaunchArgument(
             name='imu_topic',
-            default_value='/sensing/gnss/chc/imu',
+            default_value='/sensing/gnss/imu',
             description='Topic for IMU data'
         ),
         
@@ -84,8 +79,18 @@ def generate_launch_description():
         ),
 
 
-        OpaqueFunction(
-            function=launch_data_monitor_steer,
+        launch_ros.actions.Node(
+            package='learning_based_vehicle_calibration',
+            executable='data_monitor_steer.py',
+            name='data_monitor_steer',
+            output='screen',
+            parameters=[
+                {'pitch_topic': launch.substitutions.LaunchConfiguration('pitch_topic')},
+                {'actuation_status_topic': launch.substitutions.LaunchConfiguration('actuation_status_topic')},
+                {'steering_status_topic': launch.substitutions.LaunchConfiguration('steering_status_topic')},
+                {'velocity_status_topic': launch.substitutions.LaunchConfiguration('velocity_status_topic')},
+                {'imu_topic': launch.substitutions.LaunchConfiguration('imu_topic')},
+            ],
         ),
 
 

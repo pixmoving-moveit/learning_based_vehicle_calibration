@@ -6,8 +6,8 @@ import pandas as pd
 import math
 
 from tier4_vehicle_msgs.msg import ActuationStatusStamped
-from autoware_auto_vehicle_msgs.msg import VelocityReport
-from autoware_auto_vehicle_msgs.msg import SteeringReport
+from autoware_vehicle_msgs.msg import VelocityReport
+from autoware_vehicle_msgs.msg import SteeringReport
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float32
 
@@ -43,11 +43,11 @@ class primotest(rclpy.node.Node):
             self.declare_parameter('steering_threshold_3', 0.20)
             self.declare_parameter('steering_threshold_4', 0.30)
             self.declare_parameter('steering_threshold_5', 0.40)
-            self.declare_parameter('pitch_topic', "/sensing/gnss/chc/pitch")
+            self.declare_parameter('pitch_topic', "/sensing/gnss/pitch")
             self.declare_parameter('actuation_status_topic', "/vehicle/status/actuation_status")
             self.declare_parameter('steering_status_topic', "/vehicle/status/steering_status")
             self.declare_parameter('velocity_status_topic', "/vehicle/status/velocity_status")
-            self.declare_parameter('imu_topic', "/sensing/gnss/chc/imu")
+            self.declare_parameter('imu_topic', "/sensing/gnss/imu")
 
             self.declare_parameter('Recovery_Mode', False)
 

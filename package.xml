@@ -16,6 +16,7 @@
 
   
   <exec_depend>tier4_vehicle_msgs</exec_depend>
+  <exec_depend>autoware_vehicle_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>can_msgs</exec_depend>
@@ -35,4 +36,3 @@
  
 
 </package>
-

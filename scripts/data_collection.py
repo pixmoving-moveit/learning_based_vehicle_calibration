@@ -8,8 +8,8 @@ from collections import deque
 from statistics import mean
 
 from tier4_vehicle_msgs.msg import ActuationStatusStamped
-from autoware_auto_vehicle_msgs.msg import VelocityReport
-from autoware_auto_vehicle_msgs.msg import SteeringReport
+from autoware_vehicle_msgs.msg import VelocityReport
+from autoware_vehicle_msgs.msg import SteeringReport
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float32
 

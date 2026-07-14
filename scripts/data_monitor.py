@@ -2,8 +2,8 @@
 import rclpy
 import rclpy.node
 from tier4_vehicle_msgs.msg import ActuationStatusStamped
-from autoware_auto_vehicle_msgs.msg import VelocityReport
-from autoware_auto_vehicle_msgs.msg import SteeringReport
+from autoware_vehicle_msgs.msg import VelocityReport
+from autoware_vehicle_msgs.msg import SteeringReport
 from std_msgs.msg import Float32
 from sensor_msgs.msg import Imu
 from can_msgs.msg import Frame
@@ -20,12 +20,10 @@ class DataMonitor(rclpy.node.Node):
         self.can_timestamp = 0.0
         super().__init__('data_monitor')
 
-        # self.declare_parameter('pitch_topic', "/sensing/gnss/chc/pitch")
         self.declare_parameter('pitch_topic', "/sensing/gnss/pitch")
         self.declare_parameter('actuation_status_topic', "/vehicle/status/actuation_status")
         self.declare_parameter('steering_status_topic', "/vehicle/status/steering_status")
         self.declare_parameter('velocity_status_topic', "/vehicle/status/velocity_status")
-        # self.declare_parameter('imu_topic', "/sensing/gnss/chc/imu")
         self.declare_parameter('imu_topic', "/sensing/gnss/imu")
         
         
