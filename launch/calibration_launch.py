@@ -1,6 +1,13 @@
 import launch
 import launch_ros.actions
+import os
+from launch.actions import OpaqueFunction
 import launch.substitutions
+
+
+def launch_data_monitor(context):
+    # Open a new terminal and run data_monitor.py
+    os.system("gnome-terminal -- /bin/bash -c 'ros2 run learning_based_vehicle_calibration data_monitor.py; exec bash'")
 
 
 def generate_launch_description():
@@ -91,18 +98,8 @@ def generate_launch_description():
         ),
 
 
-        launch_ros.actions.Node(
-            package='learning_based_vehicle_calibration',
-            executable='data_monitor.py',
-            name='data_monitor',
-            output='screen',
-            parameters=[
-                {'pitch_topic': launch.substitutions.LaunchConfiguration('pitch_topic')},
-                {'actuation_status_topic': launch.substitutions.LaunchConfiguration('actuation_status_topic')},
-                {'steering_status_topic': launch.substitutions.LaunchConfiguration('steering_status_topic')},
-                {'velocity_status_topic': launch.substitutions.LaunchConfiguration('velocity_status_topic')},
-                {'imu_topic': launch.substitutions.LaunchConfiguration('imu_topic')},
-            ],
+        OpaqueFunction(
+            function=launch_data_monitor,
         ),
 
         launch_ros.actions.Node(
